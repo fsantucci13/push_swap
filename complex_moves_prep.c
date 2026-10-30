@@ -1,4 +1,3 @@
-
 #include "push_swap.h"
 
 void	calculate_moves(t_stack **sa, t_stack **sb)

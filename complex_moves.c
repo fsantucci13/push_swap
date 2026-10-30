@@ -1,4 +1,3 @@
-
 #include "push_swap.h"
 
 int	get_lower_position(t_stack **st)

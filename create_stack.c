@@ -1,4 +1,3 @@
-
 #include "push_swap.h"
 
 void	get_main_index(t_stack *sa, int size)

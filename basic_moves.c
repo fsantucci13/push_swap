@@ -1,4 +1,3 @@
-
 #include "push_swap.h"
 
 static int	get_max_index(t_stack *st)
@@ -27,7 +26,7 @@ static void	swap(t_stack *top)
 	top->n = top->next->n;
 	top->next->n = tmp;
 	tmp = top->main_index;
-	top->main_index = top->next->main_index;	
+	top->main_index = top->next->main_index;
 	top->next->main_index = tmp;
 }
 

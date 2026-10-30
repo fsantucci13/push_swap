@@ -1,4 +1,3 @@
-
 #include "push_swap.h"
 
 static void	reverse_both(t_stack **sa, t_stack **sb, int *mv_a, int *mv_b)

@@ -1,4 +1,3 @@
-
 #include "push_swap.h"
 
 static void	reverse(t_stack **top)
