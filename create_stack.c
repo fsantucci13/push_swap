@@ -6,7 +6,7 @@
 /*   By: fsantucc <fsantucc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/10/30 16:07:44 by fsantucc          #+#    #+#             */
-/*   Updated: 2026/10/30 16:09:05 by fsantucc         ###   ########.fr       */
+/*   Updated: 2026/10/30 19:08:26 by fsantucc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,29 +15,23 @@
 void	get_main_index(t_stack *sa, int size)
 {
 	t_stack	*a;
-	t_stack	*max_address;
-	int		max_n;
+	t_stack	*b;
+	int		rank;
 
-	while (size--)
+	(void)size;
+	a = sa;
+	while (a)
 	{
-		a = sa;
-		max_n = INT_MIN;
-		max_address = NULL;
-		while (a)
+		rank = 1;
+		b = sa;
+		while (b)
 		{
-			if (a->n == INT_MIN && a->main_index == 0)
-				a->main_index = 1;
-			else if (a->n > max_n && a->main_index == 0)
-			{
-				max_n = a->n;
-				max_address = a;
-				a = sa;
-			}
-			else
-				a = a->next;
+			if (b->n < a->n)
+				rank++;
+			b = b->next;
 		}
-		if (max_address)
-			max_address->main_index = size + 1;
+		a->main_index = rank;
+		a = a->next;
 	}
 }
 
@@ -73,41 +67,46 @@ static t_stack	*new_node(int n)
 	return (s);
 }
 
-static void	add_at_end(t_stack **st, t_stack *new)
+static int	add_at_end(t_stack **st, t_stack *node)
 {
 	t_stack	*s;
 
-	if (!new)
-		return ;
+	if (!st || !node)
+		return (0);
 	if (!*st)
-		*st = new;
+		*st = node;
 	else
 	{
 		s = *st;
 		while (s->next)
 			s = s->next;
-		s->next = new;
+		s->next = node;
 	}
+	return (1);
 }
 
 t_stack	*create_stack(int ac, char **av)
 {
 	t_stack		*sa;
+	t_stack		*node;
 	long int	n;
 	int			i;
 
 	sa = NULL;
-	n = 0;
 	i = 1;
 	while (i < ac)
 	{
 		n = ft_atoi(av[i]);
 		if (n < INT_MIN || n > INT_MAX)
 			print_error_and_exit(&sa, NULL);
-		if (i == 1)
-			sa = new_node((int)n);
-		else
-			add_at_end(&sa, new_node((int)n));
+		node = new_node((int)n);
+		if (!node)
+			print_error_and_exit(&sa, NULL);
+		if (!add_at_end(&sa, node))
+		{
+			free(node);
+			print_error_and_exit(&sa, NULL);
+		}
 		i++;
 	}
 	return (sa);

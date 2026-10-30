@@ -6,7 +6,7 @@
 /*   By: fsantucc <fsantucc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/10/30 16:06:56 by fsantucc          #+#    #+#             */
-/*   Updated: 2026/10/30 18:41:11 by fsantucc         ###   ########.fr       */
+/*   Updated: 2026/10/30 18:57:06 by fsantucc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,19 +52,19 @@ static int	is_repeated(char **arg)
 	return (0);
 }
 
-static int is_valid_number(char *s)
+static int	is_valid_number(char *s)
 {
-    if (!s || !*s)
-        return (0);
-    if (*s == '+' || *s == '-')
-        s++;
-    if (!*s)
-        return (0);
-    while (*s >= '0' && *s <= '9')
-        s++;
-    if (*s)
-        return (0);
-    return (1);
+	if (!s || !*s)
+		return (0);
+	if (*s == '+' || *s == '-')
+		s++;
+	if (!*s)
+		return (0);
+	while (*s >= '0' && *s <= '9')
+		s++;
+	if (*s)
+		return (0);
+	return (1);
 }
 
 static char	*remove_extra_zeros(char *s)

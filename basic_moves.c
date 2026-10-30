@@ -6,7 +6,7 @@
 /*   By: fsantucc <fsantucc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/10/30 16:06:43 by fsantucc          #+#    #+#             */
-/*   Updated: 2026/10/30 18:40:02 by fsantucc         ###   ########.fr       */
+/*   Updated: 2026/10/30 19:07:47 by fsantucc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,16 +42,16 @@ static void	swap(t_stack *top)
 	top->next->main_index = tmp;
 }
 
-static void push(t_stack **top1, t_stack **top2)
+static void	push(t_stack **top1, t_stack **top2)
 {
-    t_stack *tmp;
+	t_stack	*tmp;
 
-    if (!top1 || !*top1 || !top2)
-        return ;
-    tmp = (*top1)->next;
-    (*top1)->next = *top2;
-    *top2 = *top1;
-    *top1 = tmp;
+	if (!top1 || !*top1 || !top2)
+		return ;
+	tmp = (*top1)->next;
+	(*top1)->next = *top2;
+	*top2 = *top1;
+	*top1 = tmp;
 }
 
 void	swap_move(t_stack **sa, t_stack **sb, char *choice)
