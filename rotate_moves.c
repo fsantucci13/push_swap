@@ -6,42 +6,46 @@
 /*   By: fsantucc <fsantucc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/10/30 16:08:19 by fsantucc          #+#    #+#             */
-/*   Updated: 2026/10/30 16:09:09 by fsantucc         ###   ########.fr       */
+/*   Updated: 2026/10/30 18:40:41 by fsantucc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "push_swap.h"
 
-static void	reverse(t_stack **top)
+static void reverse(t_stack **top)
 {
-	t_stack	*ex_top;
-	t_stack	*new_bottom;
-	t_stack	*ex_bottom;
+    t_stack *ex_top;
+    t_stack *new_bottom;
+    t_stack *ex_bottom;
 
-	ex_bottom = *top;
-	new_bottom = *top;
-	ex_top = *top;
-	while (ex_bottom->next)
-		ex_bottom = ex_bottom->next;
-	while (new_bottom->next->next)
-		new_bottom = new_bottom->next;
-	*top = ex_bottom;
-	(*top)->next = ex_top;
-	new_bottom->next = NULL;
+    if (!top || !*top || !(*top)->next)
+        return ;
+    ex_bottom = *top;
+    new_bottom = *top;
+    ex_top = *top;
+    while (ex_bottom->next)
+        ex_bottom = ex_bottom->next;
+    while (new_bottom->next->next)
+        new_bottom = new_bottom->next;
+    *top = ex_bottom;
+    (*top)->next = ex_top;
+    new_bottom->next = NULL;
 }
 
-static void	rotate(t_stack **top)
+static void rotate(t_stack **top)
 {
-	t_stack	*ex_top;
-	t_stack	*bottom;
+    t_stack *ex_top;
+    t_stack *bottom;
 
-	ex_top = *top;
-	*top = (*top)->next;
-	bottom = *top;
-	while (bottom->next)
-		bottom = bottom->next;
-	ex_top->next = NULL;
-	bottom->next = ex_top;
+    if (!top || !*top || !(*top)->next)
+        return ;
+    ex_top = *top;
+    *top = (*top)->next;
+    bottom = *top;
+    while (bottom->next)
+        bottom = bottom->next;
+    ex_top->next = NULL;
+    bottom->next = ex_top;
 }
 
 void	rotate_move(t_stack **sa, t_stack **sb, char *choice)
