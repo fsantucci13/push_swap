@@ -6,7 +6,7 @@
 /*   By: fsantucc <fsantucc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/10/30 16:08:30 by fsantucc          #+#    #+#             */
-/*   Updated: 2026/10/30 19:14:14 by fsantucc         ###   ########.fr       */
+/*   Updated: 2026/10/30 19:24:01 by fsantucc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,13 +62,11 @@ long int	ft_atoi(const char *s)
 	int			sign;
 
 	sign = 1;
+	if (*s == '-')
+		sign = -1;
 	if (*s == '-' || *s == '+')
-		if (*s == '-')
-			sign = -1;
-	s++;
-	limit = INT_MAX;
-	if (sign == -1)
-		limit++;
+		s++;
+	limit = (long int)INT_MAX + (sign == -1);
 	result = 0;
 	while (*s >= '0' && *s <= '9')
 	{
