@@ -6,7 +6,7 @@
 /*   By: fsantucc <fsantucc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/11/01 12:12:15 by fsantucc          #+#    #+#             */
-/*   Updated: 2026/11/01 12:37:56 by fsantucc         ###   ########.fr       */
+/*   Updated: 2026/11/01 12:45:20 by fsantucc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,7 +84,6 @@ static int	fill_args(t_data *d, int ac, char **av)
 	d->na = pos;
 	return (1);
 }
-
 
 int	parse_args(t_data *d, int ac, char **av)
 {
