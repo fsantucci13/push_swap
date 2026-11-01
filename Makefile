@@ -1,30 +1,25 @@
 NAME = push_swap
-
-SRC = push_swap.c check_input.c utils.c create_stack.c \
-	basic_moves.c rotate_moves.c complex_moves.c \
-	complex_moves_prep.c complex_moves_do.c
-OBJS = $(SRC:.c=.o)
-
 CC = cc
-RM = rm -f
-CFLAGS = -Wall -Wextra -Werror -g
+CFLAGS = -Wall -Wextra -Werror
+SRC = main.c errors.c parse.c parse_utils.c parse_read.c ranks.c operations_a.c operations_b.c \
+	operations_both.c operations_helpers.c sort_simple.c sort_medium.c sort_medium_back.c \
+	sort_complex.c sort_adaptive.c bench.c bench_helpers.c
+OBJ = $(SRC:.c=.o)
 
 all: $(NAME)
 
-$(NAME): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
+$(NAME): $(OBJ)
+	$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
 
 %.o: %.c push_swap.h
-	$(CC) $(CFLAGS) -I. -c $< -o $@
-
-complex: $(NAME)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	$(RM) $(OBJS)
+	rm -f $(OBJ)
 
 fclean: clean
-	$(RM) $(NAME)
+	rm -f $(NAME)
 
 re: fclean all
 
-.PHONY: all complex clean fclean re
+.PHONY: all clean fclean re
