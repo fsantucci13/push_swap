@@ -6,7 +6,7 @@
 /*   By: fsantucc <fsantucc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/11/01 12:12:15 by fsantucc          #+#    #+#             */
-/*   Updated: 2026/11/01 12:25:00 by fsantucc         ###   ########.fr       */
+/*   Updated: 2026/11/01 12:31:46 by fsantucc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,17 +20,17 @@
 /* All arrays use index 0 as the top of the corresponding stack. */
 typedef struct s_data
 {
-	int	*a;			/* Stack A. */
-	int	*b;			/* Stack B. */
-	int	n;			/* Initial number of values. */
-	int	na;			/* Current size of A. */
-	int	nb;			/* Current size of B. */
-	int	count[11];	/* Number of each printed instruction. */
-	double	disorder;	/* Initial inversion ratio. */
-	int	strategy;	/* Requested strategy. */
-	int	method;		/* Actual method used by adaptive. */
-	int	bench;		/* Enables the benchmark report. */
-} t_data;
+	int		*a;
+	int		*b;
+	int		n;
+	int		na;
+	int		nb;
+	int		count[11];
+	double	disorder;
+	int		strategy;
+	int		method;
+	int		bench;
+}	t_data;
 
 void	error_exit(t_data *d);
 int		parse_args(t_data *d, int ac, char **av);

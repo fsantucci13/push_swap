@@ -6,7 +6,7 @@
 /*   By: fsantucc <fsantucc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/11/01 12:12:15 by fsantucc          #+#    #+#             */
-/*   Updated: 2026/11/01 12:24:50 by fsantucc         ###   ########.fr       */
+/*   Updated: 2026/11/01 12:27:21 by fsantucc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,14 +21,12 @@ void	ss(t_data *d)
 		t = d->a[0];
 		d->a[0] = d->a[1];
 		d->a[1] = t;
-
 	}
 	if (d->nb > 1)
 	{
 		t = d->b[0];
 		d->b[0] = d->b[1];
 		d->b[1] = t;
-
 	}
 	d->count[2]++;
 	write(1, "ss\n", 3);
@@ -46,7 +44,6 @@ void	rr(t_data *d)
 		while (++i < d->na)
 			d->a[i - 1] = d->a[i];
 		d->a[i - 1] = t;
-
 	}
 	if (d->nb > 1)
 	{
@@ -72,7 +69,6 @@ void	rrr(t_data *d)
 			i--;
 		}
 		d->a[0] = t;
-
 	}
 	if (d->nb > 1)
 	{

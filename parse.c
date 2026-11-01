@@ -6,7 +6,7 @@
 /*   By: fsantucc <fsantucc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/11/01 12:12:15 by fsantucc          #+#    #+#             */
-/*   Updated: 2026/11/01 12:24:58 by fsantucc         ###   ########.fr       */
+/*   Updated: 2026/11/01 12:33:47 by fsantucc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ static int	count_args(int ac, char **av)
 	return (n);
 }
 
-static int	fill_args(t_data *d, int ac, char **av)
+static int	fill_args(t_data **d, int ac, char **av)
 {
 	int	i;
 	int	pos;
@@ -76,7 +76,7 @@ static int	fill_args(t_data *d, int ac, char **av)
 		if (!av[i][0])
 			return (0);
 		if (!parse_flag(d, av[i]) && (!count_words(av[i])
-			|| !read_words(d, av[i], &pos)))
+				|| !read_words(d, av[i], &pos)))
 			return (0);
 		i++;
 	}

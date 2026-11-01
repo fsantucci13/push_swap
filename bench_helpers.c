@@ -6,7 +6,7 @@
 /*   By: fsantucc <fsantucc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/11/01 12:12:15 by fsantucc          #+#    #+#             */
-/*   Updated: 2026/11/01 12:24:12 by fsantucc         ###   ########.fr       */
+/*   Updated: 2026/11/01 12:26:38 by fsantucc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,4 +63,3 @@ void	bench_put_percent(double value)
 	bench_putnbr(decimal);
 	bench_putstr("%\n");
 }
-
