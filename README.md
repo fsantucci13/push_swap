@@ -1,200 +1,73 @@
-*This project has been created as part of the 42 curriculum by <login1>, <login2>.*
+*This project has been created as part of the 42 curriculum by <login1>, <login2>*
 
-# Push_swap
+# push_swap
+
+> **À compléter avant rendu :** remplacer les deux identifiants fictifs par les logins réels et préciser les contributions effectives de chaque apprenant.
 
 ## Description
 
-`push_swap` is a C program that prints a sequence of operations capable of sorting
-integers in ascending order in stack A, using only two stacks (A and B) and the
-Push_swap instruction set. Stack B starts empty. The first supplied integer is the
-top of stack A. The program prints one operation per line and sends diagnostics
-only to standard error.
+`push_swap` sorts a list of unique integers using two stacks and only the permitted Push_swap operations. The first argument is the top of stack A. The program prints one operation per line.
 
-This version of the subject requires four sorting strategies, an inversion-based
-disorder metric, runtime strategy selection and an optional benchmark mode.
+The mandatory implementation contains four strategies:
+- **Simple:** repeated minimum extraction, O(n²) in the Push_swap operation model.
+- **Medium:** range/chunk partitioning followed by maximum extraction from B.
+- **Complex:** rank compression followed by LSD binary radix sorting.
+- **Adaptive:** chooses Simple when disorder is below 0.2, Medium when disorder is at least 0.2 and below 0.5, and Complex otherwise.
+
+Disorder is calculated on the original input before any stack operation, as the number of inverted pairs divided by all possible pairs.
 
 ## Instructions
 
-### Compilation
+Compile with:
 
 ```sh
 make
 ```
 
-The Makefile compiles with `cc -Wall -Wextra -Werror`. Other supported targets:
-
-```sh
-make clean   # remove object files
-make fclean  # remove object files and executable
-make re      # clean and rebuild
-```
-
-### Execution
+Examples:
 
 ```sh
 ./push_swap 4 67 3 87 23
-./push_swap --simple 4 67 3 87 23
+./push_swap --simple 5 4 3 2 1
 ./push_swap --medium 4 67 3 87 23
 ./push_swap --complex 4 67 3 87 23
 ./push_swap --adaptive 4 67 3 87 23
-./push_swap --bench --adaptive 4 67 3 87 23
+./push_swap --bench 4 67 3 87 23
 ```
 
-The default strategy is `--adaptive`. The strategy selector and `--bench` can be
-placed before or after the integer arguments. Arguments may be separate integers
-or a quoted, whitespace-separated string:
+Operations are written to standard output. Benchmark information is written to standard error. Invalid input prints `Error` to standard error.
 
-```sh
-./push_swap "4 67 3 87 23"
-```
+## Algorithm details
 
-No arguments produce no output. Already sorted input also produces no operations.
-Invalid integers, overflow, empty arguments and duplicates produce `Error` on
-standard error.
+### Simple
 
-### Checking a result
+At each iteration, find the minimum in A, rotate it to the top using the shorter direction, then push it to B. Once A contains one element, move B back to A. The strategy is a quadratic baseline in operation count.
 
-The provided Linux checker was used for validation; it is not part of this
-submission because `checker` is the bonus program, which was explicitly excluded.
+### Medium
 
-```sh
-ARG="4 67 3 87 23"
-./push_swap --complex $ARG | ./checker_linux $ARG
-```
+Normalize values to ranks, then process consecutive ranges of approximately √n ranks from highest to lowest. Each range scans the remaining A once and pushes only its members to B. B contains at most √n values; extracting its maximum repeatedly costs O((√n)²) operations for that range. There are O(√n) ranges, so both scanning and chunk sorting are bounded by O(n√n) generated operations. Processing ranges from high to low places each completed, ascending chunk above the previously completed higher chunks. Auxiliary rank storage is O(n).
 
-Expected checker result: `OK`.
+### Complex
 
-### Benchmark mode
-
-`--bench` keeps the operation stream on standard output and writes metrics to
-standard error. It reports disorder as a percentage with two decimals, the
-selected strategy and its operation-model complexity, the total operation count,
-and the count of all eleven instruction types.
-
-## Strategies and algorithm justification
-
-### Disorder
-
-Before any stack operation, the program counts inversions in the original A:
-
-`disorder = inversions / (n * (n - 1) / 2)`.
-
-An inversion is a pair `(i, j)` for which `i < j` and `A[i] > A[j]`. The value is
-between 0 and 1. Zero means sorted; one means reverse-sorted. For zero or one
-integer, disorder is defined as zero.
-
-### Simple — O(n²) operations
-
-The algorithm repeatedly finds the smallest value in A, rotates it to the top
-using the shorter direction (`ra` or `rra`), and pushes it to B (`pb`). Once A is
-empty, it pushes every value back with `pa`. Since minima are pushed in ascending
-order, B contains them in reverse order; pushing them back produces ascending A.
-
-Finding each minimum examines the remaining stack, and bringing it to the top can
-require a linear number of rotations. The upper bound in generated stack
-operations is O(n²).
-
-### Medium — O(n√n) operations
-
-The algorithm divides the normalized ranks into consecutive chunks of width
-`ceil(sqrt(n))`. For each chunk, it scans the current A once. Values inside the
-chunk are pushed to B; values outside it are rotated to the bottom of A. Values
-from the lower half of a chunk are rotated in B to keep chunk groups arranged for
-the return phase. Finally, the largest remaining value in B is brought to the top and pushed to A.
-The partition phase scans at most n elements for each of about √n chunks. During
-that phase, values are grouped in B: the upper half of a chunk remains near its
-top while the lower half is rotated toward the bottom. This grouping is what keeps
-the maximum-selection rotations localized to a chunk-sized region during the
-return phase. Thus the intended operation bound is O(n√n), rather than the O(n²)
-bound of an ungrouped repeated-maximum extraction.
-
-### Complex — O(n log n) operations
-
-The program first replaces each input integer with its rank from 0 to n-1. This
-preserves numerical order while avoiding signed-integer bit complications. The
-binary LSD Radix Sort then processes one rank bit per pass:
-
-- If the current top rank has a 1 in the current bit, rotate A (`ra`).
-- Otherwise push it to B (`pb`).
-- After exactly the original number of A elements has been processed, push B
-  back to A (`pa`).
-
-There are `ceil(log2(n))` bit passes and each pass processes n elements, so the
-number of generated operations is O(n log n).
+Copy the input values, heapsort the copy, and map each input to its rank using binary search. This rank compression costs O(n log n) comparisons and O(n) auxiliary space. Then perform LSD radix passes over the ranks. Each pass processes n elements and restores B to A, giving O(n log n) generated Push_swap operations.
 
 ### Adaptive
 
-The program measures disorder once, before sorting, and applies the required
-thresholds:
+The initial disorder ratio selects the internal strategy:
+- disorder < 0.2: Simple;
+- 0.2 ≤ disorder < 0.5: Medium;
+- disorder ≥ 0.5: Complex.
 
-| Disorder | Internal method | Target operation complexity |
-|---|---|---|
-| `< 0.20` | Simple | O(n²) |
-| `0.20` to `< 0.50` | Medium | O(n√n) |
-| `>= 0.50` | Complex | O(n log n) |
-
-The thresholds divide nearly sorted, partly disordered and highly disordered
-inputs. The benchmark identifies the requested strategy as `Adaptive` and also
-shows which internal method was selected.
-
-The algorithms are practical stack-operation heuristics. They do not prove a
-globally shortest possible instruction sequence for every input permutation.
-
-## Source files
-
-| File | Responsibility |
-|---|---|
-| `push_swap.h` | Shared structure, constants from system headers and prototypes. |
-| `main.c` | Initializes state, parses, measures disorder, selects and runs the strategy, frees memory. |
-| `parse.c` | Recognizes options, allocates stacks, fills them and rejects duplicates. |
-| `parse_utils.c` | Whitespace, string comparison, integer conversion and token counting. |
-| `parse_read.c` | Reads each numeric token safely from an argument. |
-| `errors.c` | Prints the required error and checks whether A is sorted. |
-| `ranks.c` | Computes disorder and maps values to order-preserving ranks. |
-| `operations_a.c` | `sa`, `pa`, `ra`, `rra`. |
-| `operations_b.c` | `sb`, `pb`, `rb`, `rrb`. |
-| `operations_both.c` | `ss`, `rr`, `rrr`. |
-| `operations_helpers.c` | Silent B rotations used by combined instructions. |
-| `sort_simple.c` | Minimum-extraction strategy. |
-| `sort_medium.c` | Chunk partitioning phase. |
-| `sort_medium_back.c` | Rebuilds A from B in descending-maximum order. |
-| `sort_complex.c` | Binary Radix passes. |
-| `sort_adaptive.c` | Disorder thresholds and internal method selection. |
-| `bench.c`, `bench_helpers.c` | Benchmark report on standard error. |
-| `Makefile` | Compilation and cleanup rules. |
-
-## Norm and memory
-
-The source is organized with no more than five functions per C file. Function
-bodies are kept within the requested 25-line limit. The program uses no global variables. Stack arrays and temporary
-rank storage are heap-allocated and freed. The implementation uses only
-`write`, `malloc`, `free` and `exit` from the permitted system-call set; the
-benchmark formatter is implemented locally.
-
-Run `norminette` in the school environment for the authoritative style check.
-The Norminette executable was not installed in the build environment used for
-these tests, so a successful official Norminette run cannot be claimed here.
+The thresholds follow the supplied subject. The benchmark reports the actual internal strategy.
 
 ## Resources
 
-- The Push_swap subject supplied with this project.
-- Donald E. Knuth, *The Art of Computer Programming*, sorting and searching.
-- C language reference: integer ranges, pointers, arrays and dynamic allocation.
-- Algorithm references: inversion count, binary LSD Radix Sort and chunk/bucket
-  partitioning.
+- The supplied Push_swap subject, version 1.2.
+- Knuth, *The Art of Computer Programming*, sorting and searching.
+- 42 project documentation and peer review.
 
-### Use of AI
+AI assistance was used to review the subject requirements, propose a modular implementation, and generate test cases. The learners must review, understand, test, and be able to explain every submitted function and algorithm.
 
-AI assistance was used to interpret the supplied subject, organize the required
-modules, explain the data flow and algorithms, and propose test cases. The
-resulting implementation was compiled and tested against the supplied checker.
-Both learners must review the code, understand it and be able to explain it
-before submission.
+## Group requirements
 
-## Group contributions — complete before submission
-
-- `<login1>`: replace this line with the first learner's actual contribution.
-- `<login2>`: replace this line with the second learner's actual contribution.
-
-Both learners must be listed as repository contributors and must be able to
-explain every submitted part during the defense.
+Complete this section with both learners' logins and describe each learner's actual contribution. The subject requires exactly two learners and meaningful contributions from both.
