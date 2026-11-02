@@ -1,39 +1,43 @@
+*This project has been created as part of the 42 curriculum by fsantucc, mdutruel.*
+
 # push_swap — Documentation technique exhaustive
 
-> Projet 42 · `fsantucc` / `mdutruel`
 > Compilé avec `cc -Wall -Wextra -Werror`
 
 ---
 
 ## Table des matières
 
-1. [Vue d'ensemble](#1-vue-densemble)
-2. [Compilation et utilisation](#2-compilation-et-utilisation)
-3. [Modèle de données central](#3-modèle-de-données-central)
-4. [Fichier par fichier — référence complète](#4-fichier-par-fichier--référence-complète)
-   - [push\_swap.h](#41-push_swaph)
-   - [main.c](#42-mainc)
-   - [utils.c](#43-utilsc)
-   - [flags.c](#44-flagsc)
-   - [parse.c](#45-parsec)
-   - [disorder.c](#46-disorderc)
-   - [normalize.c](#47-normalizec)
-   - [operations.c](#48-operationsc)
-   - [sort\_simple.c](#49-sort_simplec)
-   - [sort\_helpers.c](#410-sort_helpersc)
-   - [sort\_medium.c](#411-sort_mediumc)
-   - [sort\_complex.c](#412-sort_complexc)
-   - [sort\_adaptive.c](#413-sort_adaptivec)
-   - [bench.c](#414-benchc)
-5. [Flux d'exécution global](#5-flux-dexécution-global)
-6. [Analyse de complexité](#6-analyse-de-complexité)
-7. [Gestion des erreurs et cas limites](#7-gestion-des-erreurs-et-cas-limites)
-8. [Gestion mémoire](#8-gestion-mémoire)
-9. [Défense technique — questions 42](#9-défense-technique--questions-42)
+1. [Description](#description)
+2. [Instructions](#instructions)
+3. [Algorithmes — justification et choix](#algorithmes--justification-et-choix)
+4. [Contributors](#contributors)
+5. [Resources](#resources)
+6. [Modèle de données central](#6-modèle-de-données-central)
+7. [Fichier par fichier — référence complète](#7-fichier-par-fichier--référence-complète)
+   - [push\_swap.h](#71-push_swaph)
+   - [main.c](#72-mainc)
+   - [utils.c](#73-utilsc)
+   - [flags.c](#74-flagsc)
+   - [parse.c](#75-parsec)
+   - [disorder.c](#76-disorderc)
+   - [normalize.c](#77-normalizec)
+   - [operations.c](#78-operationsc)
+   - [sort\_simple.c](#79-sort_simplec)
+   - [sort\_helpers.c](#710-sort_helpersc)
+   - [sort\_medium.c](#711-sort_mediumc)
+   - [sort\_complex.c](#712-sort_complexc)
+   - [sort\_adaptive.c](#713-sort_adaptivec)
+   - [bench.c](#714-benchc)
+8. [Flux d'exécution global](#8-flux-dexécution-global)
+9. [Analyse de complexité](#9-analyse-de-complexité)
+10. [Gestion des erreurs et cas limites](#10-gestion-des-erreurs-et-cas-limites)
+11. [Gestion mémoire](#11-gestion-mémoire)
+12. [Défense technique — questions 42](#12-défense-technique--questions-42)
 
 ---
 
-## 1. Vue d'ensemble
+## Description
 
 Push_swap trie une séquence d'entiers distincts en utilisant deux piles (A et B) et onze opérations primitives. Le programme imprime sur stdout la suite d'opérations qui trie la pile A dans l'ordre croissant.
 
@@ -48,7 +52,7 @@ Quatre stratégies de tri sont implémentées :
 
 ---
 
-## 2. Compilation et utilisation
+## Instructions
 
 ### Makefile — règles disponibles
 
@@ -96,7 +100,88 @@ ARG="3 1 4 2 5"; ./push_swap $ARG | ./checker_linux $ARG
 
 ---
 
-## 3. Modèle de données central
+## Algorithmes — justification et choix
+
+Quatre stratégies distinctes sont implémentées, chacune ciblant une classe de complexité différente dans le modèle d'opérations Push_swap.
+
+### Simple — O(n²) : selection sort par extraction de minimum
+
+**Algorithme :** répéter n-1 fois — trouver le minimum dans A, l'amener au sommet (RA ou RRA selon la direction la plus courte), le pousser en B — puis PA tous les éléments de B vers A dans l'ordre inverse.
+
+**Justification :** O(n²) car chaque extraction coûte O(n) rotations pour amener le min au sommet, et il y a n extractions. Convient pour n faible ou entrée presque triée (disorder bas).
+
+**Coût moyen (n=100) :** ~800-1100 opérations.
+
+### Medium — O(n√n) : tri par blocs (chunk sort)
+
+**Algorithme :** normaliser les valeurs en rangs [0..n-1]. Diviser l'espace [0..n-1] en blocs de taille k ≈ √(8n). Traiter les blocs du plus grand au plus petit : scanner A exactement `na` fois en poussant les éléments du bloc courant vers B (RA sinon), puis invoquer `sort_b_to_a` (extraire le maximum de B par rotations, PA) pour remettre le bloc dans A en ordre décroissant.
+
+**Justification :** n/k blocs de taille k. `process_range` = O(na) par bloc → O(n) total par bloc. `sort_b_to_a` = O(k²) par bloc (k éléments × k/4 rotations avg). Total : O(n/k × k²) = O(nk) = O(n√n).
+
+**Justification du seuil k :** k = √(8n) minimise nk + (n/k)×n = coût total. Plus grand k → moins de passes de scan mais plus de rotations dans sort_b_to_a.
+
+### Complex — O(n log n) : radix sort LSD
+
+**Algorithme :** normaliser en rangs [0..n-1]. Calculer b = ⌈log₂n⌉ bits nécessaires. Pour chaque bit de 0 à b-1 : itérer exactement `n` fois — si le bit courant de a[0] est 0 → PB, sinon → RA — puis PA pour tous les éléments de B.
+
+**Justification :** b passes × 2n opérations par passe = O(n log n). Insensible au désordre initial.
+
+**Coût moyen (n=500) :** ~6784 opérations (9 passes × ~750 ops/passe).
+
+### Adaptive — sélection automatique par disorder
+
+**Algorithme :** mesurer le disorder avant tout tri. Dispatche vers :
+
+| Régime | Seuil | Méthode | Complexité |
+|--------|-------|---------|------------|
+| Faible | disorder < 0.2 | Simple (selection sort) | O(n²) |
+| Moyen  | 0.2 ≤ disorder < 0.5 | Medium (chunk sort) | O(n√n) |
+| Élevé  | disorder ≥ 0.5 | Complex (radix LSD) | O(n log n) |
+
+**Justification des seuils :**
+- Seuil 0.2 : en dessous, l'entrée a peu d'inversions. Le selection sort (O(n²)) fait peu de rotations car les minimums sont proches du sommet. Pour n=100 avec disorder=0.1, environ 50 inversions → simple très efficace.
+- Seuil 0.5 : au-dessus, l'entrée est statistiquement proche d'une permutation aléatoire uniforme. Le radix sort (O(n log n)) est optimal pour des données très mélangées car son coût est indépendant de la distribution.
+- Entre 0.2 et 0.5 : le chunk sort exploite le fait que les données sont partiellement ordonnées — les blocs contiennent des éléments déjà relativement groupés, réduisant les rotations.
+
+---
+
+## Contributors
+
+Ce projet a été réalisé en binôme par :
+
+| Login | Contributions principales |
+|-------|--------------------------|
+| **fsantucc** | Architecture générale, `main.c`, `parse.c`, `flags.c`, `sort_simple.c`, `sort_medium.c`, `sort_adaptive.c`, `disorder.c`, `Makefile` |
+| **mdutruel** | `sort_complex.c`, `operations.c`, `normalize.c`, `sort_helpers.c`, `bench.c`, `utils.c`, tests et validation |
+
+Les deux membres ont participé à la conception des algorithmes, à la revue de code, et sont capables d'expliquer l'intégralité du projet en soutenance.
+
+---
+
+## Resources
+
+### Références algorithmes
+
+- **Donald E. Knuth** — *The Art of Computer Programming, Vol. 3: Sorting and Searching* — référence fondamentale sur les algorithmes de tri.
+- **Wikipedia** — [Radix sort](https://en.wikipedia.org/wiki/Radix_sort), [Heapsort](https://en.wikipedia.org/wiki/Heapsort), [Selection sort](https://en.wikipedia.org/wiki/Selection_sort) — descriptions formelles des algorithmes implémentés.
+- **Big-O Cheat Sheet** — [bigocheatsheet.com](https://www.bigocheatsheet.com/) — référence rapide de complexité.
+- **Visualgo** — [visualgo.net](https://visualgo.net/en/sorting) — visualisation interactive des algorithmes de tri.
+- **42 Push_swap resources** — tutoriels et vidéos de la communauté 42 sur l'approche chunk sort et radix.
+
+### Utilisation de l'IA
+
+L'IA (Claude, Anthropic) a été utilisée dans ce projet pour :
+
+- **Documentation et README :** génération de la structure de documentation technique, description des fonctions, explication des invariants et preuves de correction.
+- **Vérification de complexité :** validation des arguments de complexité pour chaque stratégie (bornes supérieures dans le modèle d'opérations Push_swap).
+- **Revue de code :** analyse des cas limites (INT_MIN/INT_MAX, entrée vide, doublons, débordement), vérification de la gestion mémoire et des chemins d'erreur.
+- **Débogage :** aide à tracer le comportement du radix sort sur de petits exemples pour vérifier la correction malgré l'inversion LIFO de B.
+
+L'ensemble du code C a été écrit et compris par les deux membres du groupe. L'IA n'a pas généré de code soumis directement — son rôle a été consultatif et documentaire.
+
+---
+
+## Modèle de données central
 
 ### Structure `t_data` (push\_swap.h)
 
@@ -152,7 +237,7 @@ Conséquences :
 
 ---
 
-## 4. Fichier par fichier — référence complète
+## Fichier par fichier — référence complète
 
 ---
 
@@ -1514,7 +1599,7 @@ return (total);
 
 ---
 
-## 5. Flux d'exécution global
+## Flux d'exécution global
 
 ```
 argv = ["./push_swap", "--bench", "3", "1", "4", "2", "5"]
@@ -1584,7 +1669,7 @@ main()
 
 ---
 
-## 6. Analyse de complexité
+## Analyse de complexité
 
 ### Opérations push_swap générées
 
@@ -1621,7 +1706,7 @@ main()
 
 ---
 
-## 7. Gestion des erreurs et cas limites
+## Gestion des erreurs et cas limites
 
 | Cas | Comportement |
 |-----|-------------|
@@ -1643,7 +1728,7 @@ main()
 
 ---
 
-## 8. Gestion mémoire
+## Gestion mémoire
 
 ### Allocations et libérations
 
@@ -1667,7 +1752,7 @@ main()
 
 ---
 
-## 9. Défense technique — questions 42
+## Défense technique — questions 42
 
 **Q : Pourquoi des tableaux et non des listes chaînées ?**
 
