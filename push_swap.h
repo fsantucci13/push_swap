@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   push_swap.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mdutruel <mdutruel@student.42.fr>          +#+  +:+       +#+        */
+/*   By: fsantucc <fsantucc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/11/03 15:21:12 by fsantucc          #+#    #+#             */
-/*   Updated: 2026/11/03 15:30:56 by mdutruel         ###   ########.fr       */
+/*   Updated: 2026/11/03 15:21:13 by fsantucc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,16 +18,16 @@
 
 typedef struct s_data
 {
-	int		*a;
-	int		*b;
-	int		n;
-	int		na;
-	int		nb;
-	int		count[11];
+	int	*a;
+	int	*b;
+	int	n;
+	int	na;
+	int	nb;
+	int	count[11];
 	double	disorder;
-	int		strategy;
-	int		used_strategy;
-	int		bench;
+	int	strategy;
+	int	used_strategy;
+	int	bench;
 }	t_data;
 
 enum e_op
@@ -59,6 +59,7 @@ int		is_sorted(t_data *d);
 int		normalize(t_data *d);
 void	apply_op(t_data *d, int op);
 void	sort_simple(t_data *d);
+void	sort_small(t_data *d);
 int		sort_medium(t_data *d);
 int		sort_complex(t_data *d);
 int		sort_adaptive(t_data *d);

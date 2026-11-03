@@ -46,6 +46,11 @@ static void	set_used(t_data *d)
 
 static int	run_sort(t_data *d)
 {
+	if (d->na <= 5)
+	{
+		sort_small(d);
+		return (1);
+	}
 	if (d->strategy == 0)
 	{
 		d->used_strategy = 0;
