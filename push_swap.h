@@ -6,7 +6,7 @@
 /*   By: fsantucc <fsantucc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/11/01 14:56:37 by fsantucc          #+#    #+#             */
-/*   Updated: 2026/11/01 14:56:38 by fsantucc         ###   ########.fr       */
+/*   Updated: 2026/11/03 14:25:37 by fsantucc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,7 @@ typedef struct s_data
 
 enum e_op {SA, SB, SS, PA, PB, RA, RB, RR, RRA, RRB, RRR};
 
+int		append_value(t_data *d, char *arg);
 int		ft_strcmp(const char *a, const char *b);
 void	ft_putstr_fd(const char *s, int fd);
 void	ft_putendl_fd(const char *s, int fd);

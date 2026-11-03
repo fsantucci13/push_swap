@@ -6,50 +6,44 @@
 /*   By: fsantucc <fsantucc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/11/01 14:56:35 by fsantucc          #+#    #+#             */
-/*   Updated: 2026/11/01 14:56:36 by fsantucc         ###   ########.fr       */
+/*   Updated: 2026/11/03 14:24:58 by fsantucc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+
 #include "push_swap.h"
 
-static int	number(char *s, int *out)
+static int	is_space(char c)
 {
-	long long	v;
-	long long	limit;
-	int			sign;
-
-	v = 0;
-	sign = 1;
-	if (*s == '-' || *s == '+')
-		if (*s++ == '-')
-			sign = -1;
-	if (!*s)
-		return (0);
-	limit = (long long)INT_MAX + (sign < 0);
-	while (*s >= '0' && *s <= '9')
-	{
-		v = v * 10 + (*s++ - '0');
-		if (v > limit)
-			return (0);
-	}
-	if (*s)
-		return (0);
-	*out = (int)(v * sign);
-	return (1);
+	return (c == ' ' || c == '\t' || c == '\n'
+		|| c == '\v' || c == '\f' || c == '\r');
 }
 
-static int	append_value(t_data *d, char *arg)
+static int	parse_arg(t_data *d, char *arg)
 {
-	int	value;
-	int	i;
+	char	*p;
+	char	*start;
+	char	end;
 
-	if (!number(arg, &value))
-		return (0);
-	i = 0;
-	while (i < d->na)
-		if (d->a[i++] == value)
+	p = arg;
+	while (*p)
+	{
+		while (is_space(*p))
+			p++;
+		if (!*p)
+			break ;
+		start = p;
+		while (*p && !is_space(*p))
+			p++;
+		end = *p;
+		*p = '\0';
+		if (!append_value(d, start))
+		{
+			*p = end;
 			return (0);
-	d->a[d->na++] = value;
+		}
+		*p = end;
+	}
 	return (1);
 }
 
@@ -62,9 +56,12 @@ static int	read_values(t_data *d, int argc, char **argv)
 	selected = 0;
 	while (i < argc)
 	{
-		if (is_option(argv[i]) && !set_option(d, argv[i], &selected))
-			return (0);
-		if (!is_option(argv[i]) && !append_value(d, argv[i]))
+		if (is_option(argv[i]))
+		{
+			if (!set_option(d, argv[i], &selected))
+				return (0);
+		}
+		else if (!parse_arg(d, argv[i]))
 			return (0);
 		i++;
 	}
@@ -73,7 +70,20 @@ static int	read_values(t_data *d, int argc, char **argv)
 
 int	parse_input(t_data *d, int argc, char **argv)
 {
-	d->a = malloc(sizeof(int) * argc);
+	size_t	capacity;
+	int		i;
+	char	*p;
+
+	capacity = 1;
+	i = 1;
+	while (i < argc)
+	{
+		p = argv[i];
+		while (*p++)
+			capacity++;
+		i++;
+	}
+	d->a = malloc(sizeof(int) * capacity);
 	if (!d->a || !read_values(d, argc, argv))
 		return (0);
 	d->n = d->na;
