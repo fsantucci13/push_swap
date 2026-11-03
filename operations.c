@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   operations.c                                       :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: fsantucc <fsantucc@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/11/01 14:56:33 by fsantucc          #+#    #+#             */
-/*   Updated: 2026/11/01 14:56:34 by fsantucc         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "push_swap.h"
 
 static void	swap(int *s, int n)
@@ -103,6 +91,5 @@ void	apply_op(t_data *d, int op)
 	if (op == RRB || op == RRR)
 		reverse(d->b, d->nb);
 	d->count[op]++;
-	if (!d->silent)
-		ft_putendl_fd(names[op], 1);
+	ft_putendl_fd(names[op], 1);
 }

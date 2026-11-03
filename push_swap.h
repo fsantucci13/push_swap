@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   push_swap.h                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: fsantucc <fsantucc@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/11/01 14:56:37 by fsantucc          #+#    #+#             */
-/*   Updated: 2026/11/03 14:25:37 by fsantucc         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef PUSH_SWAP_H
 # define PUSH_SWAP_H
 # include <unistd.h>
@@ -28,12 +16,23 @@ typedef struct s_data
 	int	strategy;
 	int	used_strategy;
 	int	bench;
-	int	silent;
 }	t_data;
 
-enum e_op {SA, SB, SS, PA, PB, RA, RB, RR, RRA, RRB, RRR};
+enum e_op
+{
+	SA,
+	SB,
+	SS,
+	PA,
+	PB,
+	RA,
+	RB,
+	RR,
+	RRA,
+	RRB,
+	RRR
+};
 
-int		append_value(t_data *d, char *arg);
 int		ft_strcmp(const char *a, const char *b);
 void	ft_putstr_fd(const char *s, int fd);
 void	ft_putendl_fd(const char *s, int fd);
@@ -41,6 +40,7 @@ void	ft_putnbr_fd(long n, int fd);
 int		is_option(const char *s);
 int		set_option(t_data *d, char *s, int *selected);
 int		parse_input(t_data *d, int argc, char **argv);
+int		parse_arg(t_data *d, char *arg);
 void	free_data(t_data *d);
 double	compute_disorder(t_data *d);
 int		is_sorted(t_data *d);
@@ -53,6 +53,5 @@ int		sort_adaptive(t_data *d);
 void	sort_b_to_a(t_data *d);
 int		find_min(t_data *d);
 int		find_max_b(t_data *d);
-int		sort_turk(t_data *d);
 void	print_bench(t_data *d);
 #endif

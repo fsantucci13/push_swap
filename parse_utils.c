@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   parse_utils.c                                      :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: fsantucc <fsantucc@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/11/03 14:24:47 by fsantucc          #+#    #+#             */
-/*   Updated: 2026/11/03 14:24:51 by fsantucc         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "push_swap.h"
 
 static int	number(char *s, int *out)
@@ -38,7 +26,7 @@ static int	number(char *s, int *out)
 	return (1);
 }
 
-int	append_value(t_data *d, char *arg)
+static int	append_value(t_data *d, char *arg)
 {
 	int	value;
 	int	i;
@@ -51,4 +39,49 @@ int	append_value(t_data *d, char *arg)
 			return (0);
 	d->a[d->na++] = value;
 	return (1);
+}
+
+static int	is_space(char c)
+{
+	return (c == ' ' || (c >= 9 && c <= 13));
+}
+
+static int	parse_token(t_data *d, char **p)
+{
+	char	*start;
+	char	end;
+
+	start = *p;
+	while (**p && !is_space(**p))
+		(*p)++;
+	end = **p;
+	**p = '\0';
+	if (!append_value(d, start))
+	{
+		**p = end;
+		return (0);
+	}
+	**p = end;
+	return (1);
+}
+
+int	parse_arg(t_data *d, char *arg)
+{
+	char	*p;
+	int		seen;
+
+	p = arg;
+	seen = 0;
+	while (*p)
+	{
+		while (*p && is_space(*p))
+			p++;
+		if (*p)
+		{
+			if (!parse_token(d, &p))
+				return (0);
+			seen = 1;
+		}
+	}
+	return (seen);
 }
