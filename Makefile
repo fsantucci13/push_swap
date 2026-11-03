@@ -3,7 +3,7 @@ CC = cc
 CFLAGS = -Wall -Wextra -Werror
 SRC = main.c utils.c flags.c parse.c disorder.c normalize.c operations.c \
 	sort_simple.c sort_helpers.c sort_medium.c sort_complex.c \
-	sort_adaptive.c bench.c
+	sort_turk.c sort_adaptive.c bench.c
 OBJ = $(SRC:.c=.o)
 
 all: $(NAME)

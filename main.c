@@ -25,6 +25,7 @@ static void	init_data(t_data *d)
 	d->strategy = 3;
 	d->used_strategy = 3;
 	d->bench = 0;
+	d->silent = 0;
 	i = 0;
 	while (i < 11)
 	{
@@ -38,10 +39,8 @@ static void	set_used(t_data *d)
 	d->used_strategy = d->strategy;
 	if (d->strategy == 3 && d->disorder < 0.2)
 		d->used_strategy = 0;
-	else if (d->strategy == 3 && d->disorder < 0.5)
-		d->used_strategy = 1;
 	else if (d->strategy == 3)
-		d->used_strategy = 2;
+		d->used_strategy = 3;
 }
 
 static int	run_sort(t_data *d)

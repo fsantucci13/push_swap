@@ -18,6 +18,8 @@ static const char	*strategy_name(t_data *d)
 		return ("Adaptive -> Simple O(n^2)");
 	if (d->strategy == 3 && d->used_strategy == 1)
 		return ("Adaptive -> Medium O(n sqrt(n))");
+	if (d->strategy == 3 && d->used_strategy == 3)
+		return ("Adaptive -> Turk O(n^2)");
 	if (d->strategy == 3)
 		return ("Adaptive -> Complex O(n log n)");
 	if (d->used_strategy == 0)

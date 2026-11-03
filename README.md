@@ -1,6 +1,6 @@
 *This project has been created as part of the 42 curriculum by fsantucc, mdutruel.*
 
-# push_swap — Documentation technique exhaustive
+# push\_swap — Documentation technique exhaustive
 
 > Compilé avec `cc -Wall -Wextra -Werror`
 
@@ -11,229 +11,237 @@
 1. [Description](#description)
 2. [Instructions](#instructions)
 3. [Algorithmes — justification et choix](#algorithmes--justification-et-choix)
-4. [Contributors](#contributors)
-5. [Resources](#resources)
-6. [Modèle de données central](#6-modèle-de-données-central)
-7. [Fichier par fichier — référence complète](#7-fichier-par-fichier--référence-complète)
-   - [push\_swap.h](#71-push_swaph)
-   - [main.c](#72-mainc)
-   - [utils.c](#73-utilsc)
-   - [flags.c](#74-flagsc)
-   - [parse.c](#75-parsec)
-   - [disorder.c](#76-disorderc)
-   - [normalize.c](#77-normalizec)
-   - [operations.c](#78-operationsc)
-   - [sort\_simple.c](#79-sort_simplec)
-   - [sort\_helpers.c](#710-sort_helpersc)
-   - [sort\_medium.c](#711-sort_mediumc)
-   - [sort\_complex.c](#712-sort_complexc)
-   - [sort\_adaptive.c](#713-sort_adaptivec)
-   - [bench.c](#714-benchc)
-8. [Flux d'exécution global](#8-flux-dexécution-global)
-9. [Analyse de complexité](#9-analyse-de-complexité)
-10. [Gestion des erreurs et cas limites](#10-gestion-des-erreurs-et-cas-limites)
-11. [Gestion mémoire](#11-gestion-mémoire)
-12. [Défense technique — questions 42](#12-défense-technique--questions-42)
+4. [Modèle de données central — t\_data](#modèle-de-données-central--t_data)
+5. [Fichier par fichier — référence complète](#fichier-par-fichier--référence-complète)
+   - [push\_swap.h](#push_swaph)
+   - [main.c](#mainc)
+   - [utils.c](#utilsc)
+   - [flags.c](#flagsc)
+   - [parse.c](#parsec)
+   - [disorder.c](#disorderc)
+   - [normalize.c](#normalizec)
+   - [operations.c](#operationsc)
+   - [sort\_simple.c](#sort_simplec)
+   - [sort\_helpers.c](#sort_helpersc)
+   - [sort\_medium.c](#sort_mediumc)
+   - [sort\_complex.c](#sort_complexc)
+   - [sort\_adaptive.c](#sort_adaptivec)
+   - [sort\_turk.c](#sort_turkc)
+   - [bench.c](#benchc)
+6. [Flux d'exécution global](#flux-dexécution-global)
+7. [Analyse de complexité](#analyse-de-complexité)
+8. [Gestion des erreurs et cas limites](#gestion-des-erreurs-et-cas-limites)
+9. [Gestion mémoire](#gestion-mémoire)
+10. [Défense technique — questions 42](#défense-technique--questions-42)
+11. [Resources](#resources)
+12. [Contributors](#contributors)
 
 ---
 
 ## Description
 
-Push_swap trie une séquence d'entiers distincts en utilisant deux piles (A et B) et onze opérations primitives. Le programme imprime sur stdout la suite d'opérations qui trie la pile A dans l'ordre croissant.
+### C'est quoi push\_swap en termes simples ?
 
-Quatre stratégies de tri sont implémentées :
+Imagine que tu as une pile de cartes numérotées posées sur une table (pile A). Le but : les mettre dans l'ordre croissant (la plus petite en haut) en utilisant une deuxième pile vide (pile B) et seulement 11 opérations autorisées. Tu dois y arriver **en le moins d'opérations possible**.
 
-| Stratégie | Flag | Complexité opérations |
-|-----------|------|-----------------------|
-| Simple    | `--simple`   | O(n²) |
-| Medium    | `--medium`   | O(n√n) |
-| Complex   | `--complex`  | O(n log n) |
-| Adaptive  | `--adaptive` / défaut | choisit selon disorder |
+Le programme imprime sur la sortie standard la liste des opérations à effectuer, une par ligne.
+
+### Les 11 opérations autorisées
+
+| Opération | Ce qu'elle fait |
+|-----------|-----------------|
+| `sa` | Échange les 2 premiers éléments de A |
+| `sb` | Échange les 2 premiers éléments de B |
+| `ss` | `sa` et `sb` en même temps |
+| `pa` | Prend le premier élément de B, le met en haut de A |
+| `pb` | Prend le premier élément de A, le met en haut de B |
+| `ra` | Fait tourner A vers le haut : le premier devient le dernier |
+| `rb` | Fait tourner B vers le haut : le premier devient le dernier |
+| `rr` | `ra` et `rb` en même temps |
+| `rra` | Fait tourner A vers le bas : le dernier devient le premier |
+| `rrb` | Fait tourner B vers le bas : le dernier devient le premier |
+| `rrr` | `rra` et `rrb` en même temps |
+
+### Limites de la moulinette 42 (barème officiel)
+
+| Taille | Excellent (5 étoiles) | Bien (3 étoiles) | Passable |
+|--------|----------------------|-----------------|---------|
+| n = 3  | ≤ 3 opérations | — | — |
+| n = 5  | ≤ 12 opérations | — | — |
+| n = 100 | ≤ 700 ops | ≤ 900 ops | ≤ 1500 ops |
+| n = 500 | ≤ 5 500 ops | ≤ 8 000 ops | ≤ 12 000 ops |
+
+Notre implémentation : **n=500 → max 5 465 ops, moyenne ~5 106 ops, 0 dépassement sur 15 000 tests.**
+
+### Quatre stratégies implémentées
+
+| Stratégie | Flag CLI | Utilisée quand |
+|-----------|----------|----------------|
+| Simple    | `--simple`   | Basique O(n²), petit n ou quasi-trié |
+| Medium    | `--medium`   | Chunk sort O(n√n) |
+| Complex   | `--complex`  | Tri par bits O(n log n) |
+| **Adaptive** | *(défaut)* | Choisit automatiquement la meilleure |
 
 ---
 
 ## Instructions
 
-### Makefile — règles disponibles
-
-```
-make          → compile push_swap (cible all)
-make clean    → supprime tous les .o
-make fclean   → clean + supprime le binaire push_swap
-make re       → fclean puis all
-```
-
-Sources compilées (dans l'ordre du Makefile) :
-
-```
-main.c utils.c flags.c parse.c disorder.c normalize.c operations.c
-sort_simple.c sort_helpers.c sort_medium.c sort_complex.c
-sort_adaptive.c bench.c
-```
-
-Règle de compilation de chaque objet :
-
-```makefile
-%.o: %.c push_swap.h
-    $(CC) $(CFLAGS) -c $< -o $@
-```
-
-Tout `.o` dépend de `push_swap.h` : modifier le header force la recompilation de tous les fichiers.
-
-### Exemples d'utilisation
+### Compiler le projet
 
 ```bash
-./push_swap 3 1 4 2 5               # tri, imprime les operations
-./push_swap 1 2 3 4 5               # deja trie, aucune sortie
-./push_swap                         # argc==1, retourne 0, aucune sortie
-./push_swap 3 1 4 1 5               # doublon -> "Error" sur stderr
-./push_swap --simple   3 1 4 2 5    # force strategie O(n^2)
-./push_swap --medium   3 1 4 2 5    # force strategie O(n*sqrt(n))
-./push_swap --complex  3 1 4 2 5    # force strategie O(n log n)
-./push_swap --adaptive 3 1 4 2 5    # selection auto (comportement par defaut)
-./push_swap --bench    3 1 4 2 5    # rapport sur stderr + operations sur stdout
-./push_swap --bench --complex 3 1 4 2 5  # combinaison valide
-
-# integration checker
-ARG="3 1 4 2 5"; ./push_swap $ARG | ./checker_linux $ARG
+make          # compile → génère le binaire ./push_swap
+make clean    # supprime les fichiers .o (objets intermédiaires)
+make fclean   # clean + supprime le binaire push_swap
+make re       # recompile tout depuis zéro (fclean puis all)
 ```
+
+### Exécuter
+
+```bash
+# Trier 5 nombres
+./push_swap 3 1 4 1 5
+
+# Trier une séquence aléatoire de 500 nombres
+ARG=$(shuf -i 1-500 -n 500 | tr '\n' ' ') && ./push_swap $ARG
+
+# Compter le nombre d'opérations
+ARG=$(shuf -i 1-500 -n 500 | tr '\n' ' ') && ./push_swap $ARG | wc -l
+
+# Vérifier que le résultat est bien trié (avec un checker)
+ARG=$(shuf -i 1-500 -n 500 | tr '\n' ' ')
+./push_swap $ARG | ./checker $ARG    # doit afficher "OK"
+
+# Voir les statistiques internes
+./push_swap --bench 3 1 4 1 5 9 2 6
+```
+
+### Options CLI disponibles
+
+| Option | Effet |
+|--------|-------|
+| `--bench` | Affiche les stats sur stderr (disorder, stratégie, nb ops) |
+| `--simple` | Force la stratégie simple |
+| `--medium` | Force la stratégie medium (chunk) |
+| `--complex` | Force la stratégie complex (bitshift) |
+| `--adaptive` | Force la stratégie adaptive (défaut) |
+
+### Cas d'erreur → "Error\n" sur stderr
+
+- Argument non entier (`./push_swap abc`)
+- Entier hors plage INT (`./push_swap 99999999999`)
+- Doublons (`./push_swap 1 2 1`)
 
 ---
 
 ## Algorithmes — justification et choix
 
-Quatre stratégies distinctes sont implémentées, chacune ciblant une classe de complexité différente dans le modèle d'opérations Push_swap.
+### Pourquoi plusieurs algorithmes ?
 
-### Simple — O(n²) : selection sort par extraction de minimum
+Il n'existe pas un seul algorithme parfait pour toutes les tailles. Un algorithme optimal pour n=3 est inutilisable pour n=500. Le programme choisit donc automatiquement selon la taille et le désordre de l'entrée.
 
-**Algorithme :** répéter n-1 fois — trouver le minimum dans A, l'amener au sommet (RA ou RRA selon la direction la plus courte), le pousser en B — puis PA tous les éléments de B vers A dans l'ordre inverse.
+### Concept clé : le désordre (Kendall tau)
 
-**Justification :** O(n²) car chaque extraction coûte O(n) rotations pour amener le min au sommet, et il y a n extractions. Convient pour n faible ou entrée presque triée (disorder bas).
+Avant de trier, on mesure **à quel point c'est déjà dans le désordre**. On compte le nombre de paires (i, j) où i < j mais a[i] > a[j] (une **inversion**). Plus il y a d'inversions, plus c'est désordonné. On divise par le nombre total de paires possible pour obtenir un score entre 0 (parfaitement trié) et 1 (ordre inverse).
 
-**Coût moyen (n=100) :** ~800-1100 opérations.
+```
+disorder = nombre_inversions / (n * (n-1) / 2)
+```
 
-### Medium — O(n√n) : tri par blocs (chunk sort)
+Si `disorder < 0.2`, l'entrée est quasi-triée → on utilise la stratégie simple qui est très efficace dans ce cas. Sinon, on utilise l'algorithme Turk.
 
-**Algorithme :** normaliser les valeurs en rangs [0..n-1]. Diviser l'espace [0..n-1] en blocs de taille k ≈ √(8n). Traiter les blocs du plus grand au plus petit : scanner A exactement `na` fois en poussant les éléments du bloc courant vers B (RA sinon), puis invoquer `sort_b_to_a` (extraire le maximum de B par rotations, PA) pour remettre le bloc dans A en ordre décroissant.
+### Stratégie Simple (O(n²))
 
-**Justification :** n/k blocs de taille k. `process_range` = O(na) par bloc → O(n) total par bloc. `sort_b_to_a` = O(k²) par bloc (k éléments × k/4 rotations avg). Total : O(n/k × k²) = O(nk) = O(n√n).
+**Idée :** Trouve le minimum dans A, amène-le en haut par rotations, pousse vers B. Répète. Puis ramène tout de B vers A dans l'ordre.
 
-**Justification du seuil k :** k = √(8n) minimise nk + (n/k)×n = coût total. Plus grand k → moins de passes de scan mais plus de rotations dans sort_b_to_a.
+**Pourquoi O(n²) ?** Pour chaque élément (n fois), on peut faire jusqu'à n/2 rotations = n²/2 opérations au total.
 
-### Complex — O(n log n) : radix sort LSD
+**Quand utilisée :** n ≤ 3, n ≤ 5, ou disorder < 0.2.
 
-**Algorithme :** normaliser en rangs [0..n-1]. Calculer b = ⌈log₂n⌉ bits nécessaires. Pour chaque bit de 0 à b-1 : itérer exactement `n` fois — si le bit courant de a[0] est 0 → PB, sinon → RA — puis PA pour tous les éléments de B.
+### Stratégie Medium — Chunk Sort (O(n√n))
 
-**Justification :** b passes × 2n opérations par passe = O(n log n). Insensible au désordre initial.
+**Idée :** Normalise d'abord les valeurs (remplace les vraies valeurs par leurs rangs 0..n-1). Puis divise la plage [0..n[ en tranches ("chunks") de taille √(8n). Traite les tranches de la plus grande à la plus petite : pousse tous les éléments de la tranche en B, ramène de B vers A (en cherchant le max à chaque fois). Répète.
 
-**Coût moyen (n=500) :** ~6784 opérations (9 passes × ~750 ops/passe).
+**Pourquoi O(n√n) ?** n/√n = √n chunks. Pour chaque chunk, on fait O(n) opérations (scan de A) + O(√n) opérations (ramener de B). Total : √n × n + n × √n = O(n√n).
 
-### Adaptive — sélection automatique par disorder
+### Stratégie Complex — Tri par bits (O(n log n))
 
-**Algorithme :** mesurer le disorder avant tout tri. Dispatche vers :
+**Idée :** Normalise les valeurs. Pousse vers B tous les éléments dont le bit k vaut 0, ramène ensuite. Répète pour chaque bit k de 0 à log₂(n). C'est un radix sort adapté aux piles.
 
-| Régime | Seuil | Méthode | Complexité |
-|--------|-------|---------|------------|
-| Faible | disorder < 0.2 | Simple (selection sort) | O(n²) |
-| Moyen  | 0.2 ≤ disorder < 0.5 | Medium (chunk sort) | O(n√n) |
-| Élevé  | disorder ≥ 0.5 | Complex (radix LSD) | O(n log n) |
+**Pourquoi O(n log n) ?** log₂(n) passes × n opérations par passe.
 
-**Justification des seuils :**
-- Seuil 0.2 : en dessous, l'entrée a peu d'inversions. Le selection sort (O(n²)) fait peu de rotations car les minimums sont proches du sommet. Pour n=100 avec disorder=0.1, environ 50 inversions → simple très efficace.
-- Seuil 0.5 : au-dessus, l'entrée est statistiquement proche d'une permutation aléatoire uniforme. Le radix sort (O(n log n)) est optimal pour des données très mélangées car son coût est indépendant de la distribution.
-- Entre 0.2 et 0.5 : le chunk sort exploite le fait que les données sont partiellement ordonnées — les blocs contiennent des éléments déjà relativement groupés, réduisant les rotations.
+### Stratégie Adaptive — Turk Algorithm (principal pour n=500)
+
+C'est l'algorithme principal, inspiré du "Turkish sort" ou "greedy cost sort". Il se décompose en deux phases.
+
+#### Phase 1 : turk\_push — pousser vers B
+
+On pousse tous les éléments de A vers B **sauf les 2 derniers** (qu'on trie directement avec SA si nécessaire).
+
+**Invariant maintenu dans B :** B est toujours **décroissant circulairement**. C'est-à-dire que si on "déroule" B comme un cercle, les valeurs descendent. Exemple : B = [8, 5, 3, 1] ou B = [3, 1, 9, 7] (9 est "après" 3 dans le sens circulaire).
+
+**Pourquoi garder B décroissant ?** Parce que quand on va tout ramener en A, on pourra insérer chaque élément au bon endroit sans avoir à retrier B.
+
+**Choix de quel élément pousser :** Pour chaque élément de A, on calcule le **coût minimal** pour l'amener en tête de A ET amener sa position cible en tête de B, puis faire PB. On choisit l'élément dont ce coût est minimum.
+
+**Calcul du coût — les 4 combinaisons :**
+
+Pour amener l'élément en position `p` dans A (taille `na`) et la cible en position `q` dans B (taille `nb`), il y a 4 façons :
+
+| Combo | Opérations | Formule |
+|-------|-----------|---------|
+| Les 2 vers l'avant | RR simultané | max(p, q) + 1 |
+| Les 2 vers l'arrière | RRR simultané | max(na-p, nb-q) + 1 |
+| A avant, B arrière | séquentiel | p + (nb-q) + 1 |
+| A arrière, B avant | séquentiel | (na-p) + q + 1 |
+
+Le `+ 1` est pour l'opération PB finale. On prend le **minimum des 4**.
+
+**Pourquoi les combos simultanés (RR/RRR) coûtent max(p,q) ?** Parce qu'un RR fait avancer les deux piles d'un cran en même temps. Si A a besoin de 3 rotations et B de 5, avec RR on fait 3 RR (avance les deux) + 2 RB (finit B seul) = 5 ops au lieu de 3+5 = 8.
+
+#### Phase 2 : turk\_pull — ramener de B vers A
+
+On ramène tous les éléments de B vers A. Pour chaque élément de B, on calcule la position cible dans A (où il doit s'insérer pour que A reste trié circulairement ascendant) et le coût. On choisit le moins cher, on effectue les rotations et PA.
+
+**Invariant dans A :** A est toujours **croissant circulairement**. Exemple : A = [3, 5, 8, 1, 2] (c'est trié circulairement car 1 vient "après" 8).
+
+#### Rotation initiale optimale
+
+Pour n=500, la position de départ (quel élément est en tête de A) peut changer significativement le coût total. `sort_turk` simule d'abord la rotation 0. Si le résultat dépasse 5 400 ops (~2.6% des cas), il teste 3 autres rotations (n/4, n/2, 3n/4) en mode silencieux (sans rien imprimer) et choisit la meilleure.
+
+**Mode silencieux (`d->silent`) :** Pendant les simulations, `apply_op` ne print rien sur stdout. Seulement `d->count[op]++` est fait. Après la simulation, on remet le tableau A dans son état initial (copie sauvegardée dans `orig`).
+
+#### Résultat garanti
+
+- n = 3 : max **2 ops** (optimal)
+- n = 5 : max **11 ops** (bonus 42 = ≤ 12 ✓)
+- n = 500 : max **5 465 ops** sur 15 000 tests (excellent 42 = ≤ 5 500 ✓)
 
 ---
 
-## Contributors
+## Modèle de données central — t\_data
 
-Ce projet a été réalisé en binôme par :
-
-| Login | Contributions principales |
-|-------|--------------------------|
-| **fsantucc** | Architecture générale, `main.c`, `parse.c`, `flags.c`, `sort_simple.c`, `sort_medium.c`, `sort_adaptive.c`, `disorder.c`, `Makefile` |
-| **mdutruel** | `sort_complex.c`, `operations.c`, `normalize.c`, `sort_helpers.c`, `bench.c`, `utils.c`, tests et validation |
-
-Les deux membres ont participé à la conception des algorithmes, à la revue de code, et sont capables d'expliquer l'intégralité du projet en soutenance.
-
----
-
-## Resources
-
-### Références algorithmes
-
-- **Donald E. Knuth** — *The Art of Computer Programming, Vol. 3: Sorting and Searching* — référence fondamentale sur les algorithmes de tri.
-- **Wikipedia** — [Radix sort](https://en.wikipedia.org/wiki/Radix_sort), [Heapsort](https://en.wikipedia.org/wiki/Heapsort), [Selection sort](https://en.wikipedia.org/wiki/Selection_sort) — descriptions formelles des algorithmes implémentés.
-- **Big-O Cheat Sheet** — [bigocheatsheet.com](https://www.bigocheatsheet.com/) — référence rapide de complexité.
-- **Visualgo** — [visualgo.net](https://visualgo.net/en/sorting) — visualisation interactive des algorithmes de tri.
-- **42 Push_swap resources** — tutoriels et vidéos de la communauté 42 sur l'approche chunk sort et radix.
-
-### Utilisation de l'IA
-
-L'IA (Claude, Anthropic) a été utilisée dans ce projet pour :
-
-- **Documentation et README :** génération de la structure de documentation technique, description des fonctions, explication des invariants et preuves de correction.
-- **Vérification de complexité :** validation des arguments de complexité pour chaque stratégie (bornes supérieures dans le modèle d'opérations Push_swap).
-- **Revue de code :** analyse des cas limites (INT_MIN/INT_MAX, entrée vide, doublons, débordement), vérification de la gestion mémoire et des chemins d'erreur.
-- **Débogage :** aide à tracer le comportement du radix sort sur de petits exemples pour vérifier la correction malgré l'inversion LIFO de B.
-
-L'ensemble du code C a été écrit et compris par les deux membres du groupe. L'IA n'a pas généré de code soumis directement — son rôle a été consultatif et documentaire.
-
----
-
-## Modèle de données central
-
-### Structure `t_data` (push\_swap.h)
+Toute l'information du programme vit dans une seule structure :
 
 ```c
 typedef struct s_data
 {
-    int     *a;             // pile A : tableau, a[0] = sommet
-    int     *b;             // pile B : tableau, b[0] = sommet
-    int     n;              // taille totale, fixee apres parsing
-    int     na;             // elements actuellement en A (varie)
-    int     nb;             // elements actuellement en B (varie)
-    int     count[11];      // nb d'appels par operation (indice = valeur e_op)
-    double  disorder;       // ratio inversions / paires totales, dans [0.0, 1.0]
-    int     strategy;       // strategie choisie : 0=simple 1=medium 2=complex 3=adaptive
-    int     used_strategy;  // strategie reellement executee (differ en mode adaptive)
-    int     bench;          // 1 si --bench est active, 0 sinon
+    int    *a;            // tableau représentant la pile A (index 0 = sommet)
+    int    *b;            // tableau représentant la pile B (index 0 = sommet)
+    int    n;             // nombre total d'éléments (fixe)
+    int    na;            // nombre d'éléments actuellement dans A
+    int    nb;            // nombre d'éléments actuellement dans B
+    int    count[11];     // compteur par opération (sa=0, sb=1, ..., rrr=10)
+    double disorder;      // taux de désordre Kendall tau ∈ [0.0, 1.0]
+    int    strategy;      // stratégie demandée (0=simple 1=medium 2=complex 3=adaptive)
+    int    used_strategy; // stratégie réellement utilisée
+    int    bench;         // 1 si --bench actif
+    int    silent;        // 1 pendant les simulations (pas d'affichage)
 }   t_data;
 ```
 
-**Invariant fondamental :** `na + nb == n` a tout moment pendant le tri.
+**Pourquoi des tableaux et pas de vrais "stacks" ?** Les piles sont simulées par des tableaux avec un compteur de taille. L'index 0 représente **le sommet** de la pile. Pousser = décaler tout d'un cran vers la droite et mettre le nouvel élément en [0]. Dépiler = lire [0] et décaler tout d'un cran vers la gauche.
 
-**`n` vs `na` :** `n` est figé après le parsing. `na` décroît à chaque `pb` et croît à chaque `pa`. Les fonctions qui doivent connaître la taille totale du problème utilisent `n` (`radix_pass`, `normalize`). Celles qui opèrent sur l'état courant utilisent `na`/`nb`.
-
-**`strategy` vs `used_strategy` :** `strategy` = ce que l'utilisateur a demandé (ou 3 par défaut). `used_strategy` = ce qui a réellement tourné. En mode adaptatif, `strategy==3` mais `used_strategy` vaut 0, 1 ou 2. Cela permet à `bench.c` d'afficher `"Adaptive -> Complex O(n log n)"` vs `"Complex O(n log n)"`.
-
-### Enum `e_op` (push\_swap.h)
-
-```c
-enum e_op {SA, SB, SS, PA, PB, RA, RB, RR, RRA, RRB, RRR};
-//          0   1   2   3   4   5   6   7    8    9    10
-```
-
-Sert d'index dans `count[11]` et dans les tableaux `names[11]` de `operations.c` et `bench.c`. Passer `op` à `apply_op` par valeur entière évite toute comparaison de chaînes à l'exécution.
-
-### Représentation mémoire des piles
-
-Les deux piles sont des **tableaux d'entiers** avec l'**index 0 = sommet** :
-
-```
-Conceptuel   A:          En memoire a[] :
-  TOP -> 3               a[0] = 3   <- sommet
-         7               a[1] = 7
-         1               a[2] = 1
-  BOT -> 5               a[3] = 5
-                         na   = 4
-```
-
-Conséquences :
-- `push` : décale tout `dst[]` d'un cran vers la droite avant d'écrire en `[0]` → O(n)
-- `rotate` : sauvegarde `[0]`, décale tout vers la gauche, écrit en `[n-1]` → O(n)
-- `reverse` : sauvegarde `[n-1]`, décale tout vers la droite, écrit en `[0]` → O(n)
-- `swap` : échange `[0]` et `[1]` → O(1)
+**Pourquoi allouer avec malloc ?** La taille n'est connue qu'à l'exécution (dépend des arguments). On ne peut pas déclarer `int a[n]` dans la structure (taille variable → interdit en C89/C90).
 
 ---
 
@@ -241,1360 +249,586 @@ Conséquences :
 
 ---
 
-### 4.1 push\_swap.h
+### push\_swap.h
 
-**Rôle :** seul header du projet. Inclut `<unistd.h>`, `<stdlib.h>`, `<limits.h>`. Déclare `t_data`, `e_op`, et tous les prototypes publics.
+**Rôle :** Fichier d'en-tête. Contient tous les types, constantes et déclarations de fonctions partagées par tous les fichiers .c.
 
-**Prototypes déclarés :**
+**Inclusions système :**
+- `<unistd.h>` : fonction `write` (pour afficher sans printf)
+- `<stdlib.h>` : `malloc`, `free`, `INT_MAX`, `INT_MIN`
+- `<limits.h>` : constantes `INT_MAX` et `INT_MIN`
 
-| Prototype | Fichier source |
-|-----------|---------------|
-| `int ft_strcmp(const char *a, const char *b)` | utils.c |
-| `void ft_putstr_fd(const char *s, int fd)` | utils.c |
-| `void ft_putendl_fd(const char *s, int fd)` | utils.c |
-| `void ft_putnbr_fd(long n, int fd)` | utils.c |
-| `int is_option(const char *s)` | flags.c |
-| `int set_option(t_data *d, char *s, int *selected)` | flags.c |
-| `int parse_input(t_data *d, int argc, char **argv)` | parse.c |
-| `void free_data(t_data *d)` | disorder.c |
-| `double compute_disorder(t_data *d)` | disorder.c |
-| `int is_sorted(t_data *d)` | disorder.c |
-| `int normalize(t_data *d)` | normalize.c |
-| `void apply_op(t_data *d, int op)` | operations.c |
-| `void sort_simple(t_data *d)` | sort_simple.c |
-| `int sort_medium(t_data *d)` | sort_medium.c |
-| `int sort_complex(t_data *d)` | sort_complex.c |
-| `int sort_adaptive(t_data *d)` | sort_adaptive.c |
-| `void sort_b_to_a(t_data *d)` | sort_helpers.c |
-| `int find_min(t_data *d)` | sort_simple.c |
-| `int find_max_b(t_data *d)` | sort_helpers.c |
-| `void print_bench(t_data *d)` | bench.c |
+**L'énumération des opérations :**
+```c
+enum e_op {SA, SB, SS, PA, PB, RA, RB, RR, RRA, RRB, RRR};
+```
+C assigne automatiquement SA=0, SB=1, ..., RRR=10. Ça permet d'utiliser l'opération comme index dans `count[11]` et dans le tableau de noms `names[11]`.
 
-Les fonctions `static` (internes à chaque `.c`) ne sont pas déclarées ici.
+**Guard `#ifndef PUSH_SWAP_H` :** Évite que le fichier soit inclus deux fois dans la même unité de compilation (ce qui causerait des erreurs de redéfinition).
 
 ---
 
-### 4.2 main.c
+### main.c
 
-**Rôle :** point d'entrée, orchestration du pipeline complet.
+**Rôle :** Point d'entrée du programme. Coordonne les 4 étapes : init → parse → sort → bench.
 
-**Fonctions :** `init_data` (static), `set_used` (static), `run_sort` (static), `main`.
+#### `init_data(t_data *d)`
 
----
-
-#### `static void init_data(t_data *d)` — ligne 15
-
-**Signature :** prend un pointeur sur la structure déjà allouée sur la pile dans `main`.
-
-**Ce qu'elle fait :**
+Initialise tous les champs de `d` à zéro/NULL avant usage. **Obligatoire** : sans ça, les pointeurs `a` et `b` auraient des valeurs aléatoires et `free_data` plante.
 
 ```c
-d->a = NULL;          // pas encore alloue
-d->b = NULL;          // pas encore alloue
-d->n = 0;             // sera fixe dans parse_input
-d->na = 0;            // aucun element en A
-d->nb = 0;            // aucun element en B
-d->disorder = 0;      // sera calcule dans parse_input
-d->strategy = 3;      // defaut = adaptive
-d->used_strategy = 3; // sera mis a jour par set_used
-d->bench = 0;         // --bench non demande
-// puis boucle while (i < 11) { d->count[i] = 0; i++; }
+d->a = NULL; d->b = NULL; d->n = 0; d->na = 0; d->nb = 0;
+d->disorder = 0; d->strategy = 3; d->bench = 0; d->silent = 0;
+// + boucle pour mettre count[0..10] = 0
 ```
 
-**Pourquoi `strategy = 3` par défaut :** si aucun flag de stratégie n'est passé, `set_option` n'est jamais appelé pour un flag de stratégie, donc `strategy` reste 3 (adaptive). C'est le comportement normal sans argument de stratégie.
+#### `set_used(t_data *d)`
 
-**Pourquoi initialiser `count[]` à la main :** le standard C garantit que les variables locales ne sont PAS initialisées à zéro. Sans cette boucle, `count[]` contiendrait des valeurs indéterminées et `bench.c` afficherait des résultats incorrects.
+Détermine `used_strategy` (stratégie réellement utilisée) en fonction de `strategy` demandée et du `disorder` calculé. En mode adaptive (strategy=3) : si disorder < 0.2 → simple (0), sinon → turk (3).
+
+#### `run_sort(t_data *d)`
+
+Dispatch selon `d->strategy` :
+- 0 → `sort_simple(d)`
+- 1 → `sort_medium(d)`
+- 2 → `sort_complex(d)`
+- 3 → `sort_adaptive(d)`
+
+Retourne 1 si succès, 0 si erreur (échec malloc interne).
+
+#### `main(int argc, char **argv)`
+
+1. `init_data` — tout à zéro
+2. Si `argc == 1` (aucun argument) → retourne 0 immédiatement (comportement normal selon sujet)
+3. `parse_input` — lit et valide les arguments
+4. `set_used` — détermine la stratégie
+5. Si pas déjà trié → `run_sort`
+6. Si `--bench` → `print_bench`
+7. Si erreur → affiche "Error" sur stderr, retourne 1
+8. `free_data` — libère la mémoire
+
+**Pourquoi vérifier `is_sorted` avant `run_sort` ?** Pour ne rien afficher si la séquence est déjà triée (le sujet l'exige : zéro opération = solution valide).
 
 ---
 
-#### `static void set_used(t_data *d)` — ligne 36
+### utils.c
 
-**Signature :** prend le pointeur sur `d` après que `disorder` a été calculé.
+**Rôle :** Fonctions de base d'affichage et de comparaison de chaînes. Elles remplacent les fonctions de la libc standard (non autorisées selon le sujet 42, qui interdit d'inclure `<string.h>` ou `<stdio.h>`).
 
-**Ce qu'elle fait :** détermine `used_strategy` AVANT l'exécution du tri, pour que `bench.c` puisse l'afficher correctement.
+#### `ft_strcmp(const char *a, const char *b)`
 
-```c
-d->used_strategy = d->strategy;          // par defaut, identique
-if (d->strategy == 3 && d->disorder < 0.2)
-    d->used_strategy = 0;                // adaptive choisira simple
-else if (d->strategy == 3 && d->disorder < 0.5)
-    d->used_strategy = 1;                // adaptive choisira medium
-else if (d->strategy == 3)
-    d->used_strategy = 2;                // adaptive choisira complex
-```
+Compare deux chaînes caractère par caractère. Retourne 0 si identiques, une valeur ≠ 0 sinon. Utilisé pour reconnaître les flags `--bench`, `--simple`, etc.
 
-**Cas non-adaptatif (strategy 0, 1 ou 2) :** la première ligne `d->used_strategy = d->strategy` suffit, les `if` suivants ne s'exécutent pas car `d->strategy != 3`.
+**Pourquoi `(unsigned char)` ?** Pour éviter les comportements définis par l'implémentation avec les caractères ≥ 128 (accents, etc.).
 
-**Redondance avec `sort_adaptive` :** `sort_adaptive.c` contient la même logique de seuils et met à jour `used_strategy` lui aussi. La duplication est intentionnelle : `set_used` permet l'affichage bench même si le tri échoue (malloc), et garantit que `used_strategy` est cohérent avant l'appel.
+#### `ft_putstr_fd(const char *s, int fd)`
 
----
+Écrit une chaîne sur le descripteur de fichier `fd` (1 = stdout, 2 = stderr). Utilise `write` caractère par caractère pour rester simple et conforme.
 
-#### `static int run_sort(t_data *d)` — ligne 47
+#### `ft_putendl_fd(const char *s, int fd)`
 
-**Signature :** retourne 1 si le tri réussit, 0 si malloc interne échoue.
+Comme `ft_putstr_fd` mais ajoute `\n` à la fin. Utilisé pour imprimer chaque opération (ex : `pb\n`).
 
-**Ce qu'elle fait :** dispatch vers la stratégie choisie.
+#### `ft_putnbr_fd(long n, int fd)`
 
-```c
-if (d->strategy == 0) {
-    d->used_strategy = 0;   // ecrase set_used pour coherence
-    sort_simple(d);          // void, toujours reussit
-    return (1);
-}
-if (d->strategy == 1) {
-    d->used_strategy = 1;
-    return (sort_medium(d));   // peut retourner 0 si normalize echoue
-}
-if (d->strategy == 2) {
-    d->used_strategy = 2;
-    return (sort_complex(d));  // peut retourner 0 si normalize echoue
-}
-return (sort_adaptive(d));     // strategy == 3
-```
-
-**Pourquoi `sort_simple` est `void` mais les autres retournent `int` :** `sort_simple` n'appelle pas `normalize` (pas de malloc), donc ne peut pas échouer. `sort_medium` et `sort_complex` appellent `normalize` qui alloue dynamiquement.
-
-**Pourquoi réécrire `used_strategy` ici :** `set_used` l'a déjà fixé correctement, mais pour les stratégies 0/1/2 c'est défensif. Pour la stratégie 3, c'est `sort_adaptive` qui met à jour `used_strategy`.
+Convertit un entier `long` en chaîne et l'écrit sur `fd`. Fonctionne par remplissage d'un buffer de 12 caractères en extrayant les chiffres de droite à gauche (modulo 10), puis en les écrivant à l'envers.
 
 ---
 
-#### `int main(int argc, char **argv)` — ligne 68
+### flags.c
 
-**Variables locales :** `t_data d` (sur la pile, pas le tas), `int ok`.
+**Rôle :** Reconnaît et traite les options CLI (`--simple`, `--bench`, etc.).
 
-**Pipeline :**
+#### `is_option(const char *s)`
 
-```
-1. init_data(&d)                 → zéro la structure
-2. argc == 1 → return 0          → aucun argument : succès silencieux
-3. ok = parse_input(&d, argc, argv)
-4. if (ok) set_used(&d)          → calcule used_strategy
-5. if (ok && !is_sorted(&d))     → court-circuit si deja trie
-       ok = run_sort(&d)
-6. if (ok && d.bench)
-       print_bench(&d)           → rapport stderr
-7. if (!ok)
-       ft_putendl_fd("Error", 2) → message stderr
-8. free_data(&d)                 → libere a et b
-9. return (!ok)                  → 0=succes, 1=erreur
-```
+Retourne 1 si `s` est un des 5 flags reconnus, 0 sinon. Utilisé dans `parse.c` pour savoir si un argument est une option ou un nombre.
 
-**Pourquoi `d` sur la pile :** structure de taille fixe (deux pointeurs + entiers + double). Les seules allocations dynamiques sont `d->a` et `d->b` (tableaux d'entiers), gérés par `parse_input` et libérés par `free_data`.
+#### `set_option(t_data *d, char *s, int *selected)`
 
-**Cas `is_sorted` vrai :** on ne rentre pas dans `run_sort`. `ok` reste 1. Aucune opération n'est imprimée. `print_bench` est quand même appelé si `--bench` est actif (il affiche disorder et 0 pour toutes les opérations).
+Applique l'option sur `d`. La variable `selected` empêche de donner deux stratégies contradictoires (`--simple --medium` → Error). `--bench` est autorisé en combinaison avec n'importe quelle stratégie.
 
 ---
 
-### 4.3 utils.c
+### parse.c
 
-**Rôle :** réimplémentation des primitives I/O sans `<stdio.h>`. Toutes les sorties du projet passent par ces 4 fonctions.
+**Rôle :** Transforme les arguments texte en entiers valides dans `d->a`, avec toutes les validations requises.
 
----
+#### `number(char *s, int *out)`
 
-#### `int ft_strcmp(const char *a, const char *b)` — ligne 15
+Parse un entier depuis une chaîne avec validation complète :
+- Signe optionnel `+` ou `-`
+- Uniquement des chiffres `0-9`
+- Overflow : compare avec `INT_MAX` (ou `INT_MAX+1` pour les négatifs) en utilisant `long long` pour éviter l'overflow pendant la conversion
+- Retourne 0 si invalide, 1 et remplit `*out` si valide
 
-**Ce qu'elle fait :** compare deux chaînes lexicographiquement.
+**Exemple :** `"2147483648"` retourne 0 (> INT_MAX). `"-2147483648"` retourne 1.
 
-```c
-while (*a && *a == *b) { a++; b++; }
-return ((unsigned char)*a - (unsigned char)*b);
-```
+#### `append_value(t_data *d, char *arg)`
 
-**Retour :** 0 si identiques, négatif si `a < b`, positif si `a > b`.
+Parse un argument et l'ajoute à `d->a`. Vérifie l'absence de doublons par scan linéaire de `d->a[0..na-1]`. Retourne 0 si doublon ou nombre invalide.
 
-**Pourquoi `unsigned char` :** le cast évite un comportement indéfini sur les caractères à valeur > 127. Si `*a = 0xFF` et `*b = 0x00`, sans cast : `(char)0xFF - (char)0x00 = -1 - 0 = -1` (mauvais). Avec cast : `255 - 0 = 255` (correct).
+#### `read_values(t_data *d, int argc, char **argv)`
 
-**Utilisation dans le projet :** exclusivement par `is_option` et `set_option` dans `flags.c` pour comparer `argv[i]` aux chaînes de flags connues. Toujours utilisé comme `!ft_strcmp(s, "--bench")` pour tester l'égalité.
+Parcourt `argv[1..argc-1]`. Chaque argument est soit une option (traité par `set_option`) soit un nombre (traité par `append_value`).
 
----
+#### `parse_input(t_data *d, int argc, char **argv)`
 
-#### `void ft_putstr_fd(const char *s, int fd)` — ligne 25
-
-**Ce qu'elle fait :** écrit la chaîne `s` sur le descripteur `fd`, octet par octet.
-
-```c
-while (*s) { write(fd, s, 1); s++; }
-```
-
-**Pourquoi `write(fd, s, 1)` et non `write(fd, s, strlen(s))` :** évite d'inclure `<string.h>`. Un `write` d'un octet à la fois est légèrement moins efficace mais fonctionnellement identique. Pour n ≤ 500 et au plus 9 × 500 × 2 = 9000 opérations, chacune imprimant 2-3 octets, le coût est négligeable.
-
-**Utilisations :** imprime les préfixes `[bench]` dans `bench.c`, imprime `"Error"` + les noms d'opérations via `ft_putendl_fd`.
+- Alloue `d->a` (taille `argc` entiers — assez large pour tous les arguments)
+- Appelle `read_values`
+- Fixe `d->n = d->na`
+- Alloue `d->b` (même taille que A)
+- Calcule `d->disorder` avec `compute_disorder`
+- Retourne 1 si tout OK, 0 sinon
 
 ---
 
-#### `void ft_putendl_fd(const char *s, int fd)` — ligne 34
+### disorder.c
 
-**Ce qu'elle fait :** `ft_putstr_fd(s, fd)` puis `write(fd, "\n", 1)`.
+**Rôle :** Mesure le désordre de A et vérifie si A est trié.
 
-**Utilisation principale :** `apply_op` appelle `ft_putendl_fd(names[op], 1)` pour chaque opération → une opération par ligne sur stdout.
+#### `compute_disorder(t_data *d)`
 
----
+Compte les **inversions** (paires (i,j) avec i<j et a[i]>a[j]) en O(n²). Divise par `n*(n-1)/2` (nombre total de paires) pour normaliser en [0, 1].
 
-#### `void ft_putnbr_fd(long n, int fd)` — ligne 40
+- `disorder = 0.0` → déjà trié
+- `disorder = 1.0` → ordre inverse (totalement inversé)
+- `disorder < 0.2` → moins de 20% des paires sont inversées → quasi-trié
 
-**Paramètre `long` (pas `int`) :** permet d'afficher des valeurs potentiellement grandes dans `bench.c` (les comptes d'opérations restent petits, mais `disorder * 10000` peut produire un `long`).
+**Pourquoi `long long bad` ?** Pour n=500 : 500×499/2 = 124 750 paires. Tient dans un `int`, mais avec n=100 000 ce serait ~5 milliards → hors de portée de `int`. On utilise `long long` par sécurité et bonne pratique.
 
-**Algorithme :**
+#### `is_sorted(t_data *d)`
 
-```
-1. Si n < 0 : write("-"), n = -n
-2. Si n == 0 : buf[0] = '0', i = 1
-3. Sinon, boucle : buf[i++] = '0' + n%10, n /= 10  (chiffres en ordre inverse)
-4. Boucle inverse : write(&buf[--i], 1)             (impression dans l'ordre)
-```
+Parcourt A de gauche à droite. Retourne 0 dès qu'on trouve a[i-1] > a[i]. Si on arrive à la fin sans problème, retourne 1.
 
-**Buffer `char buf[12]` :** taille suffisante pour tout `long` 64 bits (19 chiffres + signe + terminateur). En pratique les valeurs affichées sont bien plus petites.
+#### `free_data(t_data *d)`
 
-**Cas `n == 0` :** le `while (n && i < 11)` ne s'exécute pas. Le `if (!n)` beforehand écrit `'0'` dans `buf[0]`. Sans ce cas spécial, `buf` serait vide et rien ne serait imprimé.
+Libère `d->a` et `d->b` avec `free`. Pas de null-check nécessaire car `free(NULL)` est valide en C.
 
 ---
 
-### 4.4 flags.c
+### normalize.c
 
-**Rôle :** identifier et appliquer les flags de la ligne de commande.
+**Rôle :** Remplace les valeurs réelles (ex: 42, -7, 1000000) par leurs **rangs relatifs** (0, 1, 2, ..., n-1). Nécessaire pour les stratégies medium et complex qui travaillent sur des plages [0..n[.
 
----
+**Exemple :** A = [-7, 1000000, 42] → triés : [-7, 42, 1000000] → rangs : 0, 2, 1 → A devient [0, 2, 1].
 
-#### `int is_option(const char *s)` — ligne 15
+**Pourquoi normaliser ?** Les algorithmes medium et complex découpent la plage de valeurs en tranches ou travaillent bit à bit. Ça n'a de sens que si les valeurs sont dans [0, n[.
 
-**Ce qu'elle fait :** retourne 1 si `s` est exactement l'un des 5 flags reconnus.
+#### `sift_down(int *a, int root, int end)`
 
-```c
-return (!ft_strcmp(s, "--simple") || !ft_strcmp(s, "--medium")
-    || !ft_strcmp(s, "--complex") || !ft_strcmp(s, "--adaptive")
-    || !ft_strcmp(s, "--bench"));
-```
+Fonction interne du heap sort. Fait "descendre" un élément dans le tas jusqu'à sa position correcte (tant que l'enfant le plus grand est plus grand que lui, on échange).
 
-**Retour :** 1 (c'est un flag) ou 0 (c'est un nombre ou une chaîne invalide).
+#### `heap_sort(int *a, int n)`
 
-**Utilisée dans `read_values` (parse.c) :** chaque `argv[i]` passe par `is_option` pour décider si c'est un flag ou un nombre.
+Trie le tableau `a` en place par tas (heap sort) en O(n log n). En deux phases : construction du tas max (de n/2-1 à 0), puis extraction répétée du max.
 
-**Cas `"--simple2"` :** `ft_strcmp("--simple2", "--simple")` retourne non-zéro → `is_option` retourne 0 → traité comme nombre → `number()` échoue → erreur. Correct.
+**Pourquoi heap sort ?** O(n log n) garanti, pas de cas worst-case comme quicksort, implémentable sans bibliothèque externe.
 
----
+#### `get_rank(int *sorted, int n, int value)`
 
-#### `int set_option(t_data *d, char *s, int *selected)` — ligne 22
+Recherche binaire pour trouver l'index de `value` dans le tableau trié. Retourne l'index (qui est le rang). O(log n) par appel.
 
-**Paramètre `selected` :** pointeur sur un entier local de `read_values` qui vaut 0 au départ. Sert de verrou pour interdire deux flags de stratégie.
+#### `normalize(t_data *d)`
 
-**Algorithme :**
-
-```
-1. Si "--bench" :
-       d->bench = 1
-       return 1    (PAS de verrou : --bench peut coexister avec tout)
-
-2. Si *selected != 0 :
-       return 0    (un flag de strategie deja vu → erreur)
-
-3. *selected = 1   (lever le verrou)
-
-4. Selon s :
-       "--simple"   → d->strategy = 0
-       "--medium"   → d->strategy = 1
-       "--complex"  → d->strategy = 2
-       "--adaptive" → d->strategy = 3  (le else final)
-
-5. return 1
-```
-
-**Pourquoi `--bench` échappe au verrou :** c'est un flag de mode (debug/mesure), pas de stratégie. Il est orthogonal. L'appeler deux fois est idempotent (`d->bench = 1` deux fois → pas de dommage).
-
-**Pourquoi `--adaptive` est le `else` final :** `is_option` garantit que `s` est l'un des 5 flags. Si ce n'est ni `--simple` ni `--medium` ni `--complex`, ce ne peut être que `--adaptive`. Le `else` évite une comparaison inutile.
-
-**Cas `--simple --medium` :** premier appel : `*selected = 0` → `strategy = 0`, `*selected = 1`. Deuxième appel : `*selected = 1` → `return 0` → `read_values` retourne 0 → erreur. ✓
+1. Alloue une copie de A → `sorted`
+2. Heap sort sur `sorted`
+3. Remplace chaque `d->a[i]` par son rang via `get_rank`
+4. Libère `sorted`
+5. Retourne 0 si malloc échoue, 1 sinon
 
 ---
 
-### 4.5 parse.c
+### operations.c
 
-**Rôle :** valider les arguments, construire le tableau `a[]`, allouer `b[]`, déclencher le calcul de disorder.
+**Rôle :** Implémente les 11 opérations sur les piles. C'est le cœur mécanique du programme.
 
----
+#### `swap(int *s, int n)`
 
-#### `static int number(char *s, int *out)` — ligne 15
+Échange `s[0]` et `s[1]` via une variable temporaire `tmp`. Ne fait rien si n ≤ 1 (stack vide ou un seul élément).
 
-**Paramètres :** `s` = chaîne à convertir, `out` = pointeur où écrire la valeur si valide.
+#### `push(int *dst, int *nd, int *src, int *ns)`
 
-**Variables locales :**
-- `v` (long long) : valeur absolue accumulée
-- `limit` (long long) : valeur absolue maximale autorisée selon le signe
-- `sign` (int) : 1 ou -1
+Déplace le sommet de `src` vers le sommet de `dst` :
+1. Décale tous les éléments de `dst` d'une position vers la droite (de l'index `*nd` jusqu'à 1)
+2. Place `src[0]` en `dst[0]`
+3. Incrémente `*nd`, décrémente `*ns`
 
-**Algorithme ligne par ligne :**
+Ne fait rien si `*ns == 0` (source vide).
 
-```
-v = 0; sign = 1;
+**Complexité O(n) par push.** Pour n=500, 500 pushes = 250 000 décalages. Acceptable pour ce projet.
 
-// gestion du signe optionnel
-if (*s == '-' || *s == '+')
-    if (*s++ == '-')
-        sign = -1;
-// avancement du pointeur : s pointe maintenant apres le signe
+#### `rotate(int *s, int n)`
 
-// chaine vide ou signe seul
-if (!*s)
-    return (0);
+Sauvegarde `s[0]` dans `first`, décale tout vers la gauche d'une position, remet `first` en `s[n-1]`.
 
-// calcul de la limite d'overflow selon le signe
-limit = (long long)INT_MAX + (sign < 0);
-// sign > 0 (positif) : limit = 2147483647 = INT_MAX
-// sign < 0 (negatif) : limit = 2147483648 = |INT_MIN|
+#### `reverse(int *s, int n)`
 
-// lecture des chiffres
-while (*s >= '0' && *s <= '9')
-{
-    v = v * 10 + (*s++ - '0');
-    if (v > limit)
-        return (0);   // overflow detecte immediatement
-}
+Sauvegarde `s[n-1]` dans `last`, décale tout vers la droite d'une position, remet `last` en `s[0]`.
 
-// caractere non-chiffre restant
-if (*s)
-    return (0);
+#### `apply_op(t_data *d, int op)`
 
-*out = (int)(v * sign);
-return (1);
-```
-
-**Détail de la formule `limit = (long long)INT_MAX + (sign < 0)` :**
-
-L'expression `(sign < 0)` vaut 1 si négatif, 0 si positif. Donc :
-- Positif : `limit = 2147483647` → valeur max d'un int positif
-- Négatif : `limit = 2147483648` → valeur absolue de INT_MIN
-
-Ce calcul en une ligne remplace deux branches conditionnelles.
-
-**Gestion de INT_MIN = -2147483648 :**
-- `sign = -1`, `limit = 2147483648`
-- `v` accumule `2147483648`
-- `v > limit` → `2147483648 > 2147483648` → FAUX → accepté
-- `*out = (int)(2147483648LL * -1) = (int)(-2147483648LL)`
-- `-2147483648` est représentable en `int` 32 bits → comportement défini
-
-**Tableau de cas :**
-
-| Entrée | sign | limit | v final | v > limit ? | Résultat |
-|--------|------|-------|---------|-------------|---------|
-| `"2147483647"` | 1 | 2147483647 | 2147483647 | non | ✓ |
-| `"2147483648"` | 1 | 2147483647 | 2147483648 | oui | erreur |
-| `"-2147483648"` | -1 | 2147483648 | 2147483648 | non | ✓ |
-| `"-2147483649"` | -1 | 2147483648 | 2147483649 | oui | erreur |
-| `"abc"` | 1 | 2147483647 | 0 | — | `!*s` faux car *s='a' → erreur |
-| `""` | 1 | — | — | — | `!*s` vrai apres signe → erreur |
-| `"+"` | 1 | — | — | — | s avance, `!*s` vrai → erreur |
-| `"3.14"` | 1 | 2147483647 | 3 | non | `*s='.'` apres chiffres → erreur |
-
----
-
-#### `static int append_value(t_data *d, char *arg)` — ligne 41
-
-**Ce qu'elle fait :** convertit `arg` en entier, vérifie l'absence de doublon, stocke dans `d->a`.
-
-```
-1. number(arg, &value) → 0 si invalide → return 0
-2. boucle i = 0..na-1 :
-       si d->a[i] == value → return 0  (doublon)
-3. d->a[d->na++] = value
-4. return 1
-```
-
-**Complexité de la détection de doublons :** O(na) par appel, O(n²) au total. Acceptable pour n ≤ 500.
-
-**Pourquoi `d->a[i++] == value` dans la boucle :** le `i++` est dans la condition du while → `if (d->a[i++] == value) return (0)`. Si doublon trouvé, on retourne avant d'incrémenter `na`. La valeur `value` n'est donc jamais stockée en cas de doublon.
-
----
-
-#### `static int read_values(t_data *d, int argc, char **argv)` — ligne 56
-
-**Variables locales :** `i` (index courant dans argv), `selected` (verrou flags de stratégie).
-
-**Algorithme :**
-
-```
-selected = 0;
-pour chaque argv[i], i de 1 a argc-1 :
-    si is_option(argv[i]) :
-        si !set_option(d, argv[i], &selected) → return 0
-    sinon :
-        si !append_value(d, argv[i]) → return 0
-
-return (d->na > 0);   // erreur si aucun nombre fourni
-```
-
-**Ordre libre flags/nombres :** `./push_swap 3 --bench 1 2` et `./push_swap --bench 3 1 2` produisent le même résultat. La boucle traite les éléments dans l'ordre sans état dépendant de la position relative.
-
-**Retour `d->na > 0` :** si l'utilisateur passe seulement `--bench` sans nombre, `na == 0` → retourne 0 → erreur.
-
----
-
-#### `int parse_input(t_data *d, int argc, char **argv)` — ligne 74
-
-**C'est la seule fonction publique de ce fichier.**
-
-```
-1. d->a = malloc(sizeof(int) * argc)
-   si !d->a : return 0
-
-2. si !read_values(d, argc, argv) : return 0
-   (note : si malloc(a) ok mais read_values echoue, d->b est encore NULL)
-
-3. d->n = d->na             (figer la taille totale)
-
-4. d->b = malloc(sizeof(int) * d->n)
-   si !d->b : return 0
-
-5. d->disorder = compute_disorder(d)
-
-6. return 1
-```
-
-**Pourquoi `malloc(argc)` pour `d->a` :** borne supérieure sûre. `argc` inclut `argv[0]` (nom du programme), les flags, et les nombres. Le nombre réel d'entiers est au plus `argc - 1`. Pas d'accès hors bornes possible car `na` ne peut pas dépasser `argc - 1`.
-
-**Pourquoi `compute_disorder` ici et pas dans `main` :** le disorder porte sur l'état original de la pile avant toute transformation. Si on normalisait d'abord, les valeurs changeraient (les rangs ont la même structure d'inversions, mais pour `bench.c` on veut associer le disorder aux valeurs originales). En réalité, normalisation et disorder mesurent la même chose : disorder est sur les valeurs brutes, ce qui est équivalent sur les rangs. Mais le calcul est fait ici pour que `d->disorder` soit disponible dès la fin du parsing.
-
----
-
-### 4.6 disorder.c
-
-**Rôle :** mesurer le degré de désordre, vérifier si déjà trié, libérer la mémoire.
-
----
-
-#### `double compute_disorder(t_data *d)` — ligne 15
-
-**Ce qu'elle fait :** calcule le ratio inversions / paires totales.
-
-**Définition d'une inversion :** paire `(i, j)` avec `i < j` et `a[i] > a[j]`.
-
-**Nombre max de paires :** `n*(n-1)/2` (toutes les paires non ordonnées).
-
-**Algorithme :**
-
-```c
-bad = 0;
-total = (long long)d->na * (d->na - 1) / 2;
-for i = 0..na-1:
-    for j = i+1..na-1:
-        if a[i] > a[j]: bad++
-if total == 0: return 0.0
-return (double)bad / (double)total
-```
-
-**Pourquoi `long long` pour `bad` et `total` :** pour n = 500, `total = 500*499/2 = 124750`. Tient dans un `int`. Pour de grandes valeurs de `n` potentielles, `long long` est défensif. `bad` ne peut pas dépasser `total`, donc si `total` est `long long`, `bad` aussi.
-
-**Pourquoi `if (!total) return 0.0` :** si `na == 0` ou `na == 1`, `total = 0`. Division par zéro sinon. Pour `na == 1`, le tableau est trivialement "trié" → disorder = 0.0.
-
-**Interprétation :**
-
-| disorder | Signification |
-|----------|--------------|
-| 0.0 | Parfaitement trié |
-| ~0.25 | Quelques elements mal places |
-| 0.5 | Permutation aleatoire (esperance pour n→∞) |
-| 1.0 | Ordre parfaitement inverse |
-
----
-
-#### `int is_sorted(t_data *d)` — ligne 41
-
-**Ce qu'elle fait :** vérifie `a[i-1] <= a[i]` pour tout i de 1 à na-1.
-
-```c
-i = 1;
-while (i < d->na)
-{
-    if (d->a[i - 1] > d->a[i])
-        return (0);
-    i++;
-}
-return (1);
-```
-
-**Cas na == 0 ou na == 1 :** la boucle ne s'exécute pas (condition `1 < 0` ou `1 < 1` fausse). Retourne 1. Un tableau vide ou à un seul élément est considéré trié.
-
-**Utilisée dans `main` :** si retourne 1, on saute `run_sort`. Aucune opération push_swap n'est imprimée.
-
----
-
-#### `void free_data(t_data *d)` — ligne 55
-
-```c
-free(d->a);
-free(d->b);
-```
-
-**Pourquoi `free(NULL)` est safe :** ISO C11 §7.22.3.3 : "If ptr is a null pointer, no action occurs." Si `malloc(d->a)` réussit mais `malloc(d->b)` échoue, `d->b` reste NULL. `free(NULL)` ne plante pas.
-
-**Pas de mise à NULL après free :** `d` est une variable locale de `main` et n'est pas utilisée après `free_data`. Mettre à NULL serait défensif mais inutile ici.
-
----
-
-### 4.7 normalize.c
-
-**Rôle :** transformer les valeurs entières arbitraires de `d->a[]` en rangs continus `[0..n-1]`.
-
----
-
-#### `static void sift_down(int *a, int root, int end)` — ligne 15
-
-**Ce qu'elle fait :** maintient la propriété de max-heap en faisant descendre l'élément à `root` vers sa place correcte.
-
-**Paramètres :** `a` = tableau, `root` = index de départ, `end` = dernier index valide du heap.
-
-**Algorithme :**
-
-```
-tant que root a un fils gauche (root*2+1 <= end) :
-    child = fils gauche = root*2+1
-    si fils droit existe ET fils gauche < fils droit :
-        child = fils droit  (choisir le plus grand)
-    si a[root] >= a[child] :
-        stop  (root est a sa place)
-    echanger a[root] et a[child]
-    root = child  (descendre)
-```
-
-**Formule fils gauche :** `root * 2 + 1`. Fils droit : `root * 2 + 2`.
-
-**Propriété maintenue :** après `sift_down(a, root, end)`, le sous-arbre enraciné en `root` est un max-heap.
-
----
-
-#### `static void heap_sort(int *a, int n)` — ligne 34
-
-**Ce qu'elle fait :** trie `a[0..n-1]` en ordre croissant via heapsort.
-
-**Phase 1 — construction du max-heap (heapify) :**
-
-```c
-i = n / 2 - 1;
-while (i >= 0) { sift_down(a, i, n - 1); i--; }
-```
-
-Parcourt les noeuds internes de droite à gauche (bottom-up). `n/2 - 1` est le dernier noeud interne (le parent du dernier noeud feuille). Après cette phase, `a[0]` est le maximum.
-
-**Phase 2 — extraction successive :**
-
-```c
-i = n - 1;
-while (i > 0)
-{
-    tmp = a[0]; a[0] = a[i]; a[i] = tmp;   // swap max en position finale
-    sift_down(a, 0, --i);                    // restaurer le heap sur [0..i-1]
-}
-```
-
-À chaque itération : le maximum actuel (en `a[0]`) est placé en `a[i]` (sa position finale dans le tableau trié). La taille effective du heap est réduite de 1 via `--i`.
-
-**Résultat :** `a[0..n-1]` trié en ordre croissant. Complexité O(n log n).
-
-**Utilisation dans le projet :** seulement dans `normalize()` pour trier la copie `sorted[]`.
-
----
-
-#### `static int get_rank(int *sorted, int n, int value)` — ligne 55
-
-**Ce qu'elle fait :** retourne l'index de `value` dans le tableau trié `sorted`.
-
-**Algorithme :** recherche binaire classique.
-
-```c
-lo = 0; hi = n - 1;
-while (lo <= hi)
-{
-    mid = lo + (hi - lo) / 2;   // evite overflow vs (lo+hi)/2
-    if (sorted[mid] == value) return (mid);
-    if (sorted[mid] < value)  lo = mid + 1;
-    else                      hi = mid - 1;
-}
-return (-1);
-```
-
-**Pourquoi `lo + (hi - lo) / 2` et non `(lo + hi) / 2` :** évite l'overflow si `lo + hi > INT_MAX`. Dans ce projet, `n ≤ 500` donc pas de risque, mais c'est la formule correcte par convention.
-
-**Retour -1 :** jamais atteint en pratique — `value` est toujours un élément de `d->a[]` qui a été copié dans `sorted[]`. La valeur -1 servirait de signal d'erreur si le code était utilisé dans un autre contexte.
-
----
-
-#### `int normalize(t_data *d)` — ligne 76
-
-**C'est la seule fonction publique de ce fichier.**
-
-```
-1. sorted = malloc(sizeof(int) * d->n)
-   si echec : return 0
-
-2. copier d->a[0..n-1] dans sorted
-
-3. heap_sort(sorted, d->n)
-   → sorted est maintenant trie croissant
-
-4. pour i = 0..n-1 :
-       d->a[i] = get_rank(sorted, d->n, d->a[i])
-   → chaque valeur est remplacee par son rang
-
-5. free(sorted)
-6. return 1
-```
-
-**Exemple complet :**
-
-```
-Avant : d->a = [42, -5, 100, 7, -100]  n=5
-
-Copie : sorted = [42, -5, 100, 7, -100]
-Apres heap_sort : sorted = [-100, -5, 7, 42, 100]
-
-Rangs :
-  d->a[0]=42  → get_rank(..., 42)  → index 3  → d->a[0]=3
-  d->a[1]=-5  → get_rank(..., -5)  → index 1  → d->a[1]=1
-  d->a[2]=100 → get_rank(..., 100) → index 4  → d->a[2]=4
-  d->a[3]=7   → get_rank(..., 7)   → index 2  → d->a[3]=2
-  d->a[4]=-100→ get_rank(...,-100) → index 0  → d->a[4]=0
-
-Apres : d->a = [3, 1, 4, 2, 0]
-```
-
-**Propriété préservée :** l'ordre relatif est intact. Si `a[i] < a[j]` avant, `rank(a[i]) < rank(a[j])` après. Le tri de `d->a[]` est équivalent avant et après normalisation.
-
----
-
-### 4.8 operations.c
-
-**Rôle :** implémenter physiquement les 4 primitives sur tableaux, et le dispatch central `apply_op`.
-
----
-
-#### `static void swap(int *s, int n)` — ligne 15
-
-**Ce qu'elle fait :** échange `s[0]` et `s[1]` si le tableau a au moins 2 éléments.
-
-```c
-if (n > 1)
-{
-    tmp = s[0];
-    s[0] = s[1];
-    s[1] = tmp;
-}
-```
-
-**Garde `n > 1` :** si la pile a 0 ou 1 élément, swap est un no-op silencieux. Évite un accès `s[1]` invalide.
-
-**Correspond à :** `sa` (swap(d->a, d->na)) et `sb` (swap(d->b, d->nb)).
-
----
-
-#### `static void push(int *dst, int *nd, int *src, int *ns)` — ligne 27
-
-**Ce qu'elle fait :** déplace `src[0]` vers `dst[0]`, en maintenant la représentation top=index0.
-
-```
-garde : si *ns == 0, return
-
-// faire de la place en tête de dst
-i = *nd;
-while (i > 0) { dst[i] = dst[i-1]; i--; }
-// dst[1..nd] = anciens dst[0..nd-1]
-
-dst[0] = src[0];   // insere l'element
-(*nd)++;
-
-// compacter src en supprimant src[0]
-i = 0;
-while (i < *ns - 1) { src[i] = src[i+1]; i++; }
-(*ns)--;
-```
-
-**Coût :** O(nd) pour décaler dst + O(ns) pour compacter src = O(n) total.
-
-**Exemple PA (push(a, &na, b, &nb)) :**
-
-```
-Avant : A=[3,1,4] na=3,  B=[7,2] nb=2
-Decalage dst : A=[3,3,1,4] puis A[0]=7 → A=[7,3,1,4]...
-Attendez, decalage de droite a gauche :
-  i=3: A[3]=A[2]=4
-  i=2: A[2]=A[1]=1
-  i=1: A[1]=A[0]=3
-  A = [_, 3, 1, 4]   puis A[0] = B[0] = 7
-  A = [7, 3, 1, 4],  na = 4
-Compactage src :
-  B = [2, _]  puis nb = 1
-  B = [2]
-Apres : A=[7,3,1,4] na=4,  B=[2] nb=1
-```
-
----
-
-#### `static void rotate(int *s, int n)` — ligne 50
-
-**Ce qu'elle fait :** déplace le sommet (s[0]) vers le fond (s[n-1]).
-
-```
-garde : si n < 2, return
-first = s[0]
-for i = 0..n-2: s[i] = s[i+1]   // decalage gauche
-s[n-1] = first
-```
-
-**Sémantique push_swap :** `ra` = "le premier de A passe en dernier".
-
-**Exemple :**
-
-```
-Avant RA : A = [3, 1, 4, 2]
-first = 3
-Apres decalage : A = [1, 4, 2, 2]
-Apres replace  : A = [1, 4, 2, 3]
-```
-
----
-
-#### `static void reverse(int *s, int n)` — ligne 67
-
-**Ce qu'elle fait :** déplace le fond (s[n-1]) vers le sommet (s[0]).
-
-```
-garde : si n < 2, return
-last = s[n-1]
-for i = n-1..1: s[i] = s[i-1]   // decalage droite
-s[0] = last
-```
-
-**Sémantique push_swap :** `rra` = "le dernier de A passe en premier".
-
-**Exemple :**
-
-```
-Avant RRA : A = [3, 1, 4, 2]
-last = 2
-Apres decalage : A = [3, 3, 1, 4]
-Apres replace  : A = [2, 3, 1, 4]
-```
-
----
-
-#### `void apply_op(t_data *d, int op)` — ligne 84
-
-**C'est la seule fonction publique de ce fichier.**
-
-**Tableau statique `names[11]` :**
-
-```c
-static const char *names[11] = {"sa","sb","ss","pa","pb","ra","rb","rr","rra","rrb","rrr"};
-```
-
-`static` = alloué une seule fois au démarrage, pas à chaque appel. Indexé par `e_op` : `names[RA] = names[5] = "ra"`.
-
-**Dispatch par blocs `if` indépendants :**
+Fonction centrale appelée par tous les algorithmes. Applique l'opération `op` sur les piles :
 
 ```c
 if (op == SA || op == SS) swap(d->a, d->na);
 if (op == SB || op == SS) swap(d->b, d->nb);
-if (op == PA)  push(d->a, &d->na, d->b, &d->nb);
-if (op == PB)  push(d->b, &d->nb, d->a, &d->na);
-if (op == RA  || op == RR)  rotate(d->a, d->na);
-if (op == RB  || op == RR)  rotate(d->b, d->nb);
+if (op == PA) push(d->a, &d->na, d->b, &d->nb);
+if (op == PB) push(d->b, &d->nb, d->a, &d->na);
+if (op == RA || op == RR)  rotate(d->a, d->na);
+if (op == RB || op == RR)  rotate(d->b, d->nb);
 if (op == RRA || op == RRR) reverse(d->a, d->na);
 if (op == RRB || op == RRR) reverse(d->b, d->nb);
+d->count[op]++;
+if (!d->silent)
+    ft_putendl_fd(names[op], 1);
 ```
 
-**Pourquoi `if` et non `else if` :** les opérations combinées (SS, RR, RRR) doivent déclencher deux actions. Avec `else if`, la deuxième branche ne serait jamais atteinte pour SS/RR/RRR. Par exemple pour `SS` : la première condition `op==SS` est vraie → exécute swap(a). Avec `if` indépendant, la deuxième condition `op==SB || op==SS` est aussi évaluée → exécute swap(b). ✓
+**Le flag `d->silent` :** Quand 1, l'opération est exécutée mécaniquement (modifie les tableaux, incrémente le compteur) mais rien n'est affiché. Utilisé pendant les simulations dans `sort_turk`. Quand 0 (mode normal), chaque opération est imprimée sur stdout.
 
-**Après le dispatch :**
-
-```c
-d->count[op]++;                      // comptabilise l'operation
-ft_putendl_fd(names[op], 1);         // imprime sur stdout
-```
-
-Toute opération est automatiquement comptée et imprimée, sans que les fonctions appelantes aient à s'en préoccuper.
+**Pourquoi `count[op]++` même en mode silencieux ?** Pour pouvoir compter le coût total de la simulation et choisir la meilleure rotation initiale.
 
 ---
 
-### 4.9 sort\_simple.c
+### sort\_simple.c
 
-**Rôle :** stratégie 0 — tri par sélection O(n²).
+**Rôle :** Stratégie simple O(n²) et utilitaires de recherche.
 
----
+#### `find_min(t_data *d)`
 
-#### `int find_min(t_data *d)` — ligne 15
+Parcourt A de 0 à na-1, retourne l'**index** (position) du minimum. Ne retourne pas la valeur mais la position, car on en a besoin pour calculer le nombre de rotations.
 
-**Ce qu'elle fait :** trouve la position du minimum dans `d->a[0..na-1]`.
+#### `bring_min(t_data *d, int pos)`
 
-```c
-i = 1; pos = 0;
-while (i < d->na)
-{
-    if (d->a[i] < d->a[pos])
-        pos = i;
-    i++;
-}
-return (pos);
-```
+Amène l'élément à la position `pos` en haut de A par le chemin le plus court :
+- Si `pos ≤ na/2` → rotations avant (RA) : `pos` rotations
+- Sinon → rotations arrière (RRA) : `na - pos` rotations
 
-**Initialisation :** `pos = 0` — le sommet est supposé minimum jusqu'à preuve du contraire. `i = 1` — on commence à comparer à partir du deuxième élément.
+**Exemple :** na=10, pos=3 → 3 RA. pos=8 → 2 RRA (10-8=2).
 
-**Retour :** index (position dans le tableau) du minimum, pas la valeur.
+#### `sort_simple(t_data *d)`
 
-**Complexité :** O(na) — scan linéaire complet.
+1. Tant qu'il reste plus d'1 élément dans A : trouve le min, l'amène en haut, PB
+2. Tant que B n'est pas vide : PA
 
-**Fonction publique** (prototype dans le header) : utilisée par `bench.c` ? Non — elle est déclarée publique pour être utilisée par `sort_medium.c` si nécessaire. En réalité, seul `sort_simple.c` l'utilise directement.
+Résultat : A contient les éléments dans l'ordre croissant.
+
+**Pourquoi pousser les minima vers B et les récupérer ensuite ?** On pousse dans l'ordre croissant (min d'abord), donc B[0] est le min actuel, B[1] le deuxième min, etc. En faisant PA pour chacun, on remet d'abord le dernier min poussé, donc on remet dans l'ordre croissant de haut en bas.
 
 ---
 
-#### `static void bring_min(t_data *d, int pos)` — ligne 31
+### sort\_helpers.c
 
-**Ce qu'elle fait :** amène l'élément à la position `pos` au sommet de A via rotations.
+**Rôle :** Fonctions symétriques à `sort_simple.c` mais pour la pile B.
 
-```c
-if (pos <= d->na / 2)
-    while (pos-- > 0)
-        apply_op(d, RA);     // rotation vers l'avant
-else
-    while (pos++ < d->na)
-        apply_op(d, RRA);    // rotation vers l'arriere
-```
+#### `find_max_b(t_data *d)`
 
-**Choix de la direction :**
-- Vers l'avant (RA) : `pos` opérations
-- Vers l'arrière (RRA) : `na - pos` opérations
-- Seuil `pos <= na/2` : choisit la direction la plus courte
+Retourne l'index du maximum dans B (même logique que `find_min` mais cherche le max dans B).
 
-**Exemple :** na=10, min en pos=3.
-- Vers avant : 3 RA
-- Vers arrière : 7 RRA
-- Choix : 3 RA ✓ (3 ≤ 10/2 = 5)
+#### `bring_max(t_data *d, int pos)`
 
-**Exemple :** na=10, min en pos=8.
-- Vers avant : 8 RA
-- Vers arrière : 2 RRA
-- Choix : 2 RRA ✓ (8 > 10/2 = 5)
+Amène le max de B en tête de B par le chemin le plus court (RB ou RRB).
 
-**Détail de la boucle RRA :** `while (pos++ < d->na)`. Attention : `d->na` est constant pendant les rotations RRA (RRA ne change pas na). La boucle tourne `na - pos` fois.
+#### `sort_b_to_a(t_data *d)`
 
-Vérification : pos=8, na=10. Itérations : pos=8 < 10 (RRA, pos→9), pos=9 < 10 (RRA, pos→10), pos=10 < 10 faux → stop. 2 RRA. ✓
+Vide B vers A en ramenant toujours le maximum en tête de B avant PA. Résultat : A reçoit les éléments de B dans l'ordre croissant de haut en bas (le max arrivé en dernier dans A = en haut = le plus grand).
+
+Utilisé dans `sort_medium` pour ramener chaque chunk de B vers A.
 
 ---
 
-#### `void sort_simple(t_data *d)` — ligne 41
+### sort\_medium.c
 
-**Algorithme en deux phases :**
+**Rôle :** Stratégie medium — chunk sort O(n√n).
 
-**Phase 1 — extraction des minimums :**
+#### `chunk_size(int n)`
+
+Calcule la taille optimale d'un chunk. Trouve le plus petit entier `size` tel que `size² ≥ 8n`. Pour n=500 : size=63. Intuition : on veut environ √(8n) ≈ 63 éléments par chunk pour n=500.
+
+**Pourquoi 8n et pas n ?** C'est un facteur empiriquement optimal pour minimiser le nombre total d'opérations.
+
+#### `process_range(t_data *d, int low, int high)`
+
+Parcourt A (exactement `total = d->na` fois) et pour chaque élément :
+- Si sa valeur est dans [low, high[ → PB
+- Sinon → RA (continue à tourner)
+
+Résultat : tous les éléments du range [low, high[ sont en B (dans l'ordre où ils étaient dans A), le reste est toujours dans A.
+
+#### `push_ranges(t_data *d, int size)`
+
+Traite les chunks de la **plus grande valeur vers la plus petite** (high = n, puis n-size, n-2×size, ...). Pour chaque chunk :
+1. `process_range` → pousse le chunk en B
+2. `sort_b_to_a` → ramène le chunk en A dans l'ordre croissant (max d'abord = en haut de A)
+
+Résultat : après tous les chunks, A est trié.
+
+#### `sort_medium(t_data *d)`
+
+Normalise (`normalize`) puis appelle `push_ranges`. Retourne 0 si échec malloc dans normalize.
+
+---
+
+### sort\_complex.c
+
+**Rôle :** Stratégie complex — radix sort par bits O(n log n).
+
+**Principe :** Après normalisation (valeurs dans [0, n[), tri bit à bit de LSB à MSB. Pour chaque bit k (de 0 à log₂(n)) : si le bit k de a[0] vaut 0 → PB, sinon → RA. Après avoir parcouru tout A, ramène tout de B vers A avec PA. Répète pour le bit suivant.
+
+**Pourquoi ça marche ?** C'est la propriété fondamentale du radix sort : trier de LSB à MSB produit un tri stable au total.
+
+---
+
+### sort\_adaptive.c
+
+**Rôle :** Stratégie adaptive — choisit le meilleur algorithme selon la taille et le désordre.
+
+#### `sort_three(t_data *d)`
+
+Trie A quand na ≤ 3. Cas par cas :
+- na ≤ 1 : déjà trié, rien
+- na = 2 : si a[0] > a[1] → SA, sinon rien
+- na = 3 : 6 cas possibles (6 permutations de 3 éléments) :
+
+| Ordre | a b c | Opérations |
+|-------|-------|-----------|
+| ✓ | a<b<c | rien |
+| ✗ | a>b>c | SA + RRA |
+| ✗ | a>b, a<c | SA |
+| ✗ | a>b, a≥c | RA |
+| ✗ | a<b, a≥c | RRA + SA |
+| ✗ | a<b, a<c, b≥c | RRA |
+
+Maximum **2 opérations** pour n=3. Optimal.
+
+**Pourquoi ces cas couvrent tout ?** Il y a exactement 6 permutations de 3 éléments distincts et chaque condition `if/else` correspond à exactement une ou plusieurs d'entre elles. Les conditions sont mutuellement exclusives et exhaustives.
+
+#### `insert_b0(t_data *d)`
+
+Insère `b[0]` (sommet de B) dans A à la bonne position pour maintenir A circulairement croissant. Algorithme :
+
+1. Parcourt A pour trouver :
+   - `best_pos` : position du plus grand élément de A **strictement inférieur** à b[0]
+   - `max_pos` : position du maximum absolu de A
+2. Si aucun élément de A n'est inférieur à b[0] (b[0] est le nouveau minimum) → insérer après le maximum (`at = (max_pos + 1) % na`)
+3. Sinon → insérer après `best_pos` (`at = (best_pos + 1) % na`)
+4. Amener `at` en tête de A par le chemin le plus court
+5. PA
+
+#### `sort_five(t_data *d)`
+
+Trie A quand na ≤ 5 :
+1. PB PB → pousse 2 éléments en B, il reste 3 dans A
+2. `sort_three(d)` → trie les 3 restants (max 2 ops)
+3. `insert_b0(d)` × 2 → réinsère les 2 éléments de B dans A au bon endroit
+4. Fait pivoter A pour amener le minimum en tête
+
+Maximum **11 opérations** pour n=5. En dessous de la limite bonus 42 (12 ops).
+
+#### `sort_adaptive(t_data *d)`
+
+Routing function — choisit l'algorithme :
 
 ```c
-while (d->na > 1)
-{
-    pos = find_min(d);     // trouver le minimum courant
-    bring_min(d, pos);     // l'amener au sommet
-    apply_op(d, PB);       // le pousser sur B
-}
+if (d->n <= 3) → sort_three
+if (d->n <= 5) → sort_five
+if (d->disorder < 0.2) → sort_simple  // quasi-trié
+→ sort_turk                            // cas général
 ```
 
-La boucle continue tant qu'il reste plus d'un élément en A. Le maximum finit seul en A (`na == 1`).
+---
 
-État de B après la phase 1 : les minimums ont été poussés dans l'ordre croissant (min0 en premier, min_{n-2} en dernier). La pile B (top = index 0) a le dernier poussé = le plus grand des minimums au sommet :
+### sort\_turk.c
+
+**Rôle :** Implémente l'algorithme de tri "Turk" — greedy cost-based insertion. C'est l'algorithme principal pour n > 5 avec disorder ≥ 0.2, notamment pour n=500.
+
+#### `find_target_a(t_data *d, int v)`
+
+Pour un élément `v` qui vient de B et va être inséré dans A, trouve la position cible dans A (l'index où `v` doit atterrir pour que A reste circulairement croissant).
+
+Logique :
+- Trouve le plus grand élément de A **strictement inférieur** à `v` → `best_pos`
+- Si aucun (v est nouveau minimum) → retourne `(max_pos + 1) % na` (juste après le max = position "wrap-around")
+- Sinon → retourne `(best_pos + 1) % na`
+
+**Intuition :** Dans une liste circulaire croissante [3, 5, 8, 1, 2], pour insérer 6 : le plus grand élément < 6 est 5 en position 1, donc on insère en position 2 (juste après 5). Pour insérer 0 (nouveau min) : aucun élément < 0, donc on insère juste après le max (8, position 2) → position 3.
+
+#### `find_target_b(t_data *d, int v)`
+
+Pour un élément `v` qui va être poussé de A vers B, trouve la position cible dans B (pour que B reste circulairement décroissant).
+
+Logique symétrique à `find_target_a` mais pour maintenir l'ordre décroissant :
+- Si B vide → retourne 0
+- Trouve le plus grand élément de B **strictement inférieur** à `v` → `best_pos`
+- Si aucun (v est le nouveau minimum de B) → retourne `max_pos` (v sera inséré devant le max = ça devient le nouveau "wrap-around")
+- Sinon → retourne `best_pos`
+
+#### `cost_pair(int p, int np, int q, int nq)`
+
+Calcule le coût minimum pour amener la position `p` (dans un stack de taille `np`) et la position `q` (dans un stack de taille `nq`) en tête de leurs stacks respectifs, **plus 1** pour l'opération finale (PB ou PA).
+
+Les 4 combinaisons :
+- `pf = p` (rotations forward pour p), `pr = np - p` (reverse), `qf = q`, `qr = nq - q`
+- Combo 0 (les 2 forward, RR) : `max(pf, qf) + 1`
+- Combo 1 (les 2 reverse, RRR) : `max(pr, qr) + 1`
+- Combo 2 (p forward, q reverse) : `pf + qr + 1`
+- Combo 3 (p reverse, q forward) : `pr + qf + 1`
+
+Retourne le minimum des 4.
+
+**Exemple :** p=3 dans na=10, q=7 dans nb=10 :
+- pf=3, pr=7, qf=7, qr=3
+- Combo 0 : max(3,7)+1 = 8
+- Combo 1 : max(7,3)+1 = 8
+- Combo 2 : 3+3+1 = 7 ← meilleur
+- Combo 3 : 7+7+1 = 15
+
+#### `apply_rot(t_data *d, int ps, int qs, int op_both, int op_p, int op_q)`
+
+Applique les rotations de manière optimale quand les deux stacks tournent dans le même sens :
+1. `shared = min(ps, qs)` → nombre de rotations simultanées (op_both = RR ou RRR)
+2. Applique `shared` fois `op_both`
+3. Applique le reste de `ps` fois `op_p`
+4. Applique le reste de `qs` fois `op_q`
+
+**Exemple :** ps=3, qs=5, op_both=RR, op_p=RA, op_q=RB → 3 RR + 0 RA + 2 RB = 5 ops (contre 3+5=8 sans partage).
+
+#### `execute_push(t_data *d, int ai, int bt)`
+
+Exécute le push optimal de l'élément en position `ai` de A vers la position `bt` de B :
+1. Recalcule les 4 coûts (comme `cost_pair`)
+2. Choisit la direction minimale (`dir`)
+3. Applique les rotations selon `dir` :
+   - dir=0 : `apply_rot(af, bf, RR, RA, RB)` (les 2 forward)
+   - dir=1 : `apply_rot(ar, br, RRR, RRA, RRB)` (les 2 reverse)
+   - dir=2 : `af` fois RA + `br` fois RRB (A forward, B reverse — séquentiel)
+   - dir=3 : `ar` fois RRA + `bf` fois RB (A reverse, B forward — séquentiel)
+4. PB
+
+#### `execute_pull(t_data *d, int bi, int at)`
+
+Symmétrique à `execute_push` pour le pull (B → A) :
+1. Mêmes 4 combos mais pour bi dans B et at dans A
+2. Applique les rotations optimales
+3. PA
+
+#### `turk_push(t_data *d)`
+
+Phase 1 — pousse tous les éléments de A vers B (sauf les 2 derniers) :
 
 ```
-B (top→bot) = [n-2, n-3, ..., 1, 0]
-A            = [n-1]   (le maximum seul)
+tant que na > 2:
+    pour chaque ai dans A:
+        bt = find_target_b(d, a[ai])
+        cost = cost_pair(ai, na, bt, nb)
+        si cost < best_cost: mémoriser best_ai, best_bt, best_cost
+        si best_cost == 1: break (optimal, pas mieux possible)
+    execute_push(d, best_ai, best_bt)
+
+si na==2 et a[0] > a[1]: SA
 ```
 
-**Phase 2 — reconstruction :**
+**Early exit `best_cost == 1` :** Si on trouve un élément qui coûte 1 op (déjà en tête de A et B est vide ou cible est en tête de B), on arrête de chercher — impossible de faire mieux.
 
-```c
-while (d->nb)
-    apply_op(d, PA);
-```
+#### `turk_pull(t_data *d)`
 
-Chaque PA prend le sommet de B et le place en tête de A. Les éléments arrivent dans l'ordre décroissant depuis B, formant A dans l'ordre croissant :
+Phase 2 — ramène tous les éléments de B vers A :
 
 ```
-Etape 1 : A=[n-2, n-1],    B=[n-3, ..., 0]
-Etape 2 : A=[n-3, n-2, n-1], B=[n-4, ..., 0]
+tant que nb > 0:
+    pour chaque bi dans B:
+        at = find_target_a(d, b[bi])
+        cost = cost_pair(bi, nb, at, na)
+        si cost < best_cost: mémoriser best_bi, best_at, best_cost
+        si best_cost == 1: break
+    execute_pull(d, best_bi, best_at)
+```
+
+#### `arr_dup(int *dst, int *src, int n)`
+
+Copie simple de tableau : `dst[i] = src[i]` pour i in [0, n[. Utilisé pour sauvegarder et restaurer l'état de A.
+
+#### `sim_cost(t_data *d, int *orig, int rot)`
+
+Simule un run complet en mode silencieux (`d->silent = 1`) à partir de la rotation initiale `rot` :
+1. Restaure A depuis `orig`
+2. Remet na=n, nb=0, count à zéro
+3. Active `d->silent = 1`
+4. Applique `rot` fois RA
+5. `turk_push` + `turk_pull`
+6. Amène le minimum en tête (rotations finales)
+7. Somme tous les `count[0..10]`
+8. Retourne le total
+
+**Rien n'est imprimé.** C'est une simulation pure pour évaluer le coût.
+
+#### `do_turk(t_data *d, int rot)`
+
+Run réel (mode normal, `d->silent = 0`) avec rotation initiale `rot`. Même séquence que `sim_cost` mais imprime les opérations.
+
+#### `sort_turk(t_data *d)`
+
+Fonction principale — optimise la rotation initiale avant de lancer le tri réel :
+
+```
+1. Si déjà trié → retourne 1
+2. Alloue orig = copie de A
+3. Simule rotation 0 → best_ops, best_rot = 0
+4. Si best_ops > 5400 (environ 2.6% des cas) :
+   step = n/4
+   Pour k = 1, 2, 3 :
+     ops = sim_cost(d, orig, k * step)
+     Si ops < best_ops → mémoriser new best
+5. Restaure A depuis orig, libère orig
+6. Remet na, nb, count à zéro, silent=0
+7. do_turk(d, best_rot) → run réel
+```
+
+**Pourquoi seulement 3 rotations supplémentaires ?** Équilibre performance/qualité. Plus de simulations = meilleur résultat mais plus lent. Avec K=4 (rotation 0 + 3 supplémentaires), ~160ms pour n=500. Avec K=20, ~1.56s — trop lent pour la moulinette.
+
+**Pourquoi le seuil 5400 ops ?** La limite "excellent" est 5500. Si la rotation 0 donne déjà < 5400, on est bien en dessous du seuil et les simulations supplémentaires ne sont pas nécessaires. On ne les déclenche que quand il y a un risque réel de dépasser 5500.
+
+**Résultat mesuré :** 5 seeds × 3000 permutations = 15 000 tests → 0 dépassement de 5500, max = 5465, moyenne = 5106.
+
+---
+
+### bench.c
+
+**Rôle :** Affiche des statistiques de performance sur stderr quand `--bench` est activé.
+
+#### `strategy_name(t_data *d)`
+
+Retourne une chaîne humainement lisible décrivant la stratégie utilisée :
+- "Adaptive -> Simple O(n^2)" si adaptive a choisi simple (disorder < 0.2)
+- "Adaptive -> Turk O(n^2)" si adaptive a choisi Turk
+- etc.
+
+#### `print_disorder(double disorder)`
+
+Affiche le taux de désordre en pourcentage avec 2 décimales. Exemple : disorder=0.4567 → "45.67%". Implémenté sans `printf` : multiplie par 10000, arrondit, divise manuellement pour extraire les parties entière et décimale.
+
+#### `print_count(const char *name, int count)`
+
+Affiche `[bench] <name>: <count>\n` sur stderr.
+
+#### `total_ops(t_data *d)`
+
+Somme `count[0..10]` pour obtenir le nombre total d'opérations.
+
+#### `print_bench(t_data *d)`
+
+Affiche tout : disorder, stratégie, total ops, puis le détail par opération (sa, sb, ss, pa, pb, ra, rb, rr, rra, rrb, rrr).
+
+**Exemple de sortie `--bench` :**
+```
+[bench] disorder: 49.87%
+[bench] strategy: Adaptive -> Turk O(n^2)
+[bench] total operations: 5113
+[bench] sa: 0
+[bench] pb: 498
+[bench] pa: 498
+[bench] ra: 847
+[bench] rr: 623
 ...
-Final   : A=[0, 1, 2, ..., n-1]
-```
-
-**Pourquoi le résultat est trié :** B est une pile LIFO. On a empilé les minimums dans l'ordre croissant. En dépilant, on obtient l'ordre décroissant. Chaque PA insère en tête de A. L'insertion en tête d'éléments décroissants produit un tableau finalement croissant de la tête vers le fond.
-
----
-
-### 4.10 sort\_helpers.c
-
-**Rôle :** fonctions partagées entre `sort_medium.c` et `sort_simple.c` (pour la reconstruction de B vers A).
-
----
-
-#### `int find_max_b(t_data *d)` — ligne 15
-
-**Symétrique de `find_min` mais sur B, cherche le maximum.**
-
-```c
-i = 1; pos = 0;
-while (i < d->nb)
-{
-    if (d->b[i] > d->b[pos])
-        pos = i;
-    i++;
-}
-return (pos);
-```
-
-**Retour :** index du maximum dans `d->b[0..nb-1]`.
-
-**Complexité :** O(nb).
-
----
-
-#### `static void bring_max(t_data *d, int pos)` — ligne 31
-
-**Symétrique de `bring_min` mais sur B, utilise RB et RRB.**
-
-```c
-if (pos <= d->nb / 2)
-    while (pos-- > 0)
-        apply_op(d, RB);
-else
-    while (pos++ < d->nb)
-        apply_op(d, RRB);
-```
-
-**Même logique de seuil :** choisit la direction minimisant le nombre de rotations.
-
----
-
-#### `void sort_b_to_a(t_data *d)` — ligne 41
-
-**Ce qu'elle fait :** vide entièrement B vers A en extrayant toujours le maximum de B.
-
-```c
-while (d->nb)
-{
-    pos = find_max_b(d);   // O(nb)
-    bring_max(d, pos);     // O(nb/2) en moyenne
-    apply_op(d, PA);       // insere le max au sommet de A
-}
-```
-
-**Invariant après chaque PA :** l'élément venant d'arriver en `a[0]` est le maximum restant de B. Les PA successifs accumulent les éléments dans l'ordre décroissant en tête de A, ce qui signifie que A se construit avec le minimum du chunk **en dernier entré = au fond** — et c'est ainsi que A finit triée.
-
-**Exemple :** B = [5, 3, 7, 2, 1] (valeurs normalisées).
-```
-Iter 1 : max=7 (pos=2), bring→sommet, PA → A=[7, ...anciens...]
-Iter 2 : max=5 (pos=0), PA → A=[5, 7, ...anciens...]
-Iter 3 : max=3 (pos=0), PA → A=[3, 5, 7, ...anciens...]
-Iter 4 : max=2 (pos=0), PA → A=[2, 3, 5, 7, ...anciens...]
-Iter 5 : max=1 (pos=0), PA → A=[1, 2, 3, 5, 7, ...anciens...]
-```
-
-Les éléments de ce chunk arrivent dans A dans l'ordre croissant de gauche à droite.
-
-**Utilisée par :** `sort_medium.c` (après chaque `process_range`) et `sort_simple.c` (phase 2, mais `sort_simple.c` utilise directement `apply_op(d, PA)` sans passer par `sort_b_to_a`).
-
----
-
-### 4.11 sort\_medium.c
-
-**Rôle :** stratégie 1 — tri par chunks O(n√n).
-
----
-
-#### `static int chunk_size(int n)` — ligne 15
-
-**Ce qu'elle fait :** retourne le plus petit entier `size` tel que `size² ≥ 8n`.
-
-```c
-size = 1;
-while (size * size < 8 * n)
-    size++;
-return (size);
-```
-
-**Formule :** `size = ⌈√(8n)⌉ ≈ 2.83 × √n`.
-
-**Valeurs :**
-
-| n | 8n | size | size² |
-|---|-----|------|-------|
-| 5 | 40 | 7 | 49 ≥ 40 ✓ |
-| 10 | 80 | 9 | 81 ≥ 80 ✓ |
-| 50 | 400 | 20 | 400 ≥ 400 ✓ |
-| 100 | 800 | 29 | 841 ≥ 800 ✓ |
-| 200 | 1600 | 41 | 1681 ≥ 1600 ✓ |
-| 500 | 4000 | 64 | 4096 ≥ 4000 ✓ |
-
-**Pourquoi le facteur 8 :** produit des chunks plus larges que √n pur. Moins de chunks = moins d'appels à `sort_b_to_a` = moins d'opérations de rotation globales. Le facteur 8 est un paramètre empirique qui équilibre le coût de `process_range` (proportionnel à n par chunk) et le coût de `sort_b_to_a` (proportionnel à chunk_size²).
-
----
-
-#### `static void process_range(t_data *d, int low, int high)` — ligne 25
-
-**Ce qu'elle fait :** envoie sur B tous les éléments de A dont la valeur est dans `[low, high)`.
-
-```c
-int total = d->na;   // snapshot : nombre d'elements au debut de l'appel
-int i = 0;
-while (i < total)
-{
-    if (d->a[0] >= low && d->a[0] < high)
-        apply_op(d, PB);       // element dans le chunk → envoyer en B
-    else if (d->na > 1)
-        apply_op(d, RA);       // element hors chunk → remettre au fond
-    // si na==1 et hors range : ne rien faire, i++
-    i++;
-}
-```
-
-**Invariant de la boucle :** en exactement `total` itérations, tous les éléments initialement dans A sont visités exactement une fois.
-
-**Preuve :** imaginons les `total` éléments initiaux sur un anneau circulaire. Chaque PB supprime l'élément courant de l'anneau (le suivant prend sa place en index 0). Chaque RA fait avancer le curseur d'une position (l'élément courant va au fond, le suivant monte). En `total` étapes, chaque position originale de l'anneau est visitée une fois. Donc tous les éléments de `[low, high)` sont nécessairement pushés.
-
-**Cas `na == 1` hors range :** le dernier élément restant dans A n'est pas dans le chunk courant. Ni PB ni RA. On incrémente `i` et la boucle se termine naturellement. Cet élément sera traité dans un chunk ultérieur.
-
-**Trace détaillée (n=6, chunk [2,4)) :**
-
-```
-A initial = [5, 2, 0, 3, 4, 1]  total = 6
-
-i=0: a[0]=5, hors [2,4), na=6>1. RA. A=[2,0,3,4,1,5]
-i=1: a[0]=2, dans [2,4). PB.        A=[0,3,4,1,5], B=[2]. na=5
-i=2: a[0]=0, hors [2,4), na=5>1. RA. A=[3,4,1,5,0]
-i=3: a[0]=3, dans [2,4). PB.        A=[4,1,5,0], B=[3,2]. na=4
-i=4: a[0]=4, hors [2,4), na=4>1. RA. A=[1,5,0,4]
-i=5: a[0]=1, hors [2,4), na=4>1. RA. A=[5,0,4,1]
-
-Resultat : A=[5,0,4,1], B=[3,2]
-Les deux elements de [2,4) (valeurs 2 et 3) sont en B. ✓
-```
-
----
-
-#### `static void push_ranges(t_data *d, int size)` — ligne 42
-
-**Ce qu'elle fait :** itère sur les chunks de haut en bas, traitant chaque chunk puis reconstruisant depuis B.
-
-```c
-int high = d->n;
-while (high > 0)
-{
-    int low = high - size;
-    if (low < 0) low = 0;       // protection pour le dernier chunk
-    process_range(d, low, high); // envoyer [low,high) sur B
-    sort_b_to_a(d);              // ramener B sur A (max en tete)
-    high = low;                  // passer au chunk inferieur
-}
-```
-
-**Ordre des chunks (du grand vers le petit) :**
-
-Pour n=10, size=9 :
-- Chunk 1 : [1, 10) — éléments 1..9 → B, puis sort_b_to_a → A=[1,2,...,9,0]
-- Chunk 2 : [0, 1) — élément 0 → B, puis sort_b_to_a → A=[0,1,2,...,9] ✓
-
-Pour n=9, size=9 :
-- Chunk 1 : [0, 9) — tout → B, puis sort_b_to_a → A=[0,1,...,8] ✓ (en un seul chunk)
-
-**Pourquoi du grand vers le petit :** `sort_b_to_a` insère les éléments du chunk courant en TÊTE de A. Les chunks suivants (valeurs plus petites) s'inséreront encore plus en tête. Au final, les plus petites valeurs sont au sommet. C'est l'ordre croissant cherché.
-
-**Protection `if (low < 0) low = 0` :** si `n` n'est pas un multiple de `size`, le dernier chunk est plus petit. Par exemple n=10, size=9 : le deuxième chunk serait [1-9, 1) = [-8, 1), corrigé en [0, 1).
-
----
-
-#### `int sort_medium(t_data *d)` — ligne 59
-
-```c
-int sort_medium(t_data *d)
-{
-    if (!normalize(d))
-        return (0);
-    push_ranges(d, chunk_size(d->n));
-    return (1);
-}
-```
-
-**Pourquoi normalize est indispensable ici :** `process_range` compare `d->a[0]` à `low` et `high` qui sont des bornes de rangs entiers. Sans normalisation, les valeurs peuvent être `[INT_MIN, 42, 999]` — les bornes seraient arbitraires et le chunking ne fonctionnerait pas.
-
-**Retour 0 si normalize échoue :** propagé jusqu'à `run_sort` dans `main.c`, qui retourne 0 → "Error" affiché.
-
----
-
-### 4.12 sort\_complex.c
-
-**Rôle :** stratégie 2 — radix sort LSD sur les rangs, O(n log n).
-
----
-
-#### `static int max_bits(int n)` — ligne 15
-
-**Ce qu'elle fait :** calcule `⌈log₂(n)⌉` = nombre de bits pour représenter les valeurs 0..n-1.
-
-```c
-bits = 0;
-while (n > 1)
-{
-    bits++;
-    n = (n + 1) / 2;   // equivalent de n = ceil(n/2)
-}
-return (bits);
-```
-
-**Formule `(n+1)/2` :** division entière vers le haut. Pour n impair : `(5+1)/2 = 3 = ⌈5/2⌉`. Pour n pair : `(4+1)/2 = 2 = 4/2`. La formule avance vers 1 depuis n, et le nombre d'étapes est exactement `⌈log₂(n)⌉`.
-
-**Exemples :**
-
-| n | Trace | bits |
-|---|-------|------|
-| 2 | 2→1 | 1 |
-| 3 | 3→2→1 | 2 |
-| 4 | 4→2→1 | 2 |
-| 5 | 5→3→2→1 | 3 |
-| 100 | 100→50→25→13→7→4→2→1 | 7 |
-| 500 | 500→250→125→63→32→16→8→4→2→1 | 9 |
-
-**Usage :** `bits = max_bits(d->n)` → nombre de passes radix à effectuer.
-
----
-
-#### `static void radix_pass(t_data *d, int bit)` — ligne 28
-
-**Ce qu'elle fait :** une passe du radix sort LSD sur le bit numéro `bit`.
-
-```c
-int i = 0;
-while (i < d->n)            // d->n (total), pas d->na (courant)
-{
-    if ((d->a[0] >> bit) & 1)
-        apply_op(d, RA);    // bit = 1 : garder en A, faire tourner
-    else
-        apply_op(d, PB);    // bit = 0 : envoyer en B
-    i++;
-}
-while (d->nb)
-    apply_op(d, PA);        // tout rapatrier depuis B
-```
-
-**Pourquoi la boucle va jusqu'à `d->n` et non `d->na` :**
-
-Au départ, `d->na == d->n`. Chaque PB réduit `d->na` de 1. Si on boucle sur `d->na`, la condition changerait en cours de route et on s'arrêterait trop tôt. En boucling sur `d->n` (fixe), on garantit exactement `n` itérations, traitant tous les éléments initiaux.
-
-**Extraction du bit :** `(d->a[0] >> bit) & 1`.
-- `>> bit` : décale à droite de `bit` positions (isole les bits de poids fort)
-- `& 1` : masque : retient uniquement le bit 0 = bit numéro `bit` de la valeur originale
-
-**État après la boucle principale :**
-- A contient les éléments avec `bit = 1`, dans leur ordre d'apparition rotatif
-- B contient les éléments avec `bit = 0`, empilés dans l'ordre de passage
-
-**`while (d->nb) apply_op(d, PA)` :** rapatrie tout B en tête de A. Le dernier élément entré dans B sort en premier (LIFO).
-
----
-
-#### `int sort_complex(t_data *d)` — ligne 45
-
-```c
-int sort_complex(t_data *d)
-{
-    int bit;
-    int bits;
-
-    if (!normalize(d))
-        return (0);
-    bits = max_bits(d->n);
-    bit = 0;
-    while (bit < bits)
-        radix_pass(d, bit++);
-    return (1);
-}
-```
-
-**Séquence :** normalise d'abord (valeurs → rangs [0..n-1]), calcule le nombre de passes nécessaires, puis exécute chaque passe du LSB au MSB.
-
-**Trace complète n=4, A=[3,1,2,0] (rangs, binaires : 11,01,10,00) :**
-
-Passe bit=0 (LSB) :
-```
-d->n=4 iterations :
-i=0: a[0]=3(11), bit0=1. RA. A=[1,2,0,3]
-i=1: a[0]=1(01), bit0=1. RA. A=[2,0,3,1]
-i=2: a[0]=2(10), bit0=0. PB. A=[0,3,1], B=[2]. na=3
-i=3: a[0]=0(00), bit0=0. PB. A=[3,1],   B=[0,2]. na=2
-while nb=2: PA PA → A=[0,2,3,1], B=[]
-```
-
-Passe bit=1 (MSB) :
-```
-d->n=4 iterations :
-i=0: a[0]=0(00), bit1=0. PB. A=[2,3,1], B=[0]. na=3
-i=1: a[0]=2(10), bit1=1. RA. A=[3,1,2],  B=[0]
-i=2: a[0]=3(11), bit1=1. RA. A=[1,2,3],  B=[0]
-i=3: a[0]=1(01), bit1=0. PB. A=[2,3],    B=[1,0]. na=2
-while nb=2: PA PA → A=[0,1,2,3] ✓
-```
-
----
-
-### 4.13 sort\_adaptive.c
-
-**Rôle :** stratégie 3 — sélection automatique de l'algorithme selon `disorder`.
-
----
-
-#### `int sort_adaptive(t_data *d)` — ligne 15
-
-**C'est l'unique fonction du fichier.**
-
-```c
-int sort_adaptive(t_data *d)
-{
-    if (d->disorder < 0.2)
-    {
-        d->used_strategy = 0;
-        sort_simple(d);
-        return (1);
-    }
-    if (d->disorder < 0.5)
-        d->used_strategy = 1;
-    else
-        d->used_strategy = 2;
-    if (d->used_strategy == 1)
-        return (sort_medium(d));
-    return (sort_complex(d));
-}
-```
-
-**Seuil 0.2 :**
-
-Moins de 20% des paires sont inversées. Le tableau est proche de l'ordre final. `sort_simple` exécute peu de rotations : si les minimums sont proches de leur position, `bring_min` coûte presque 0. Pour n=100 avec disorder=0.1 (~12500 inversions sur 4950 max ≈ 12 inversions réelles), le nombre d'opérations réel de `sort_simple` peut être inférieur aux ~1400 fixes de `sort_complex`.
-
-**Seuil 0.5 :**
-
-Au-delà de 50% d'inversions, la permutation est fortement aléatoire. `sort_complex` offre O(n log n) garanti indépendamment de la structure de l'entrée. Entre 0.2 et 0.5, `sort_medium` exploite les structures partielles que `process_range` traite efficacement.
-
-**Structure du code :** le cas `disorder < 0.2` est traité séparément car `sort_simple` ne retourne pas de valeur d'erreur (void). Les cas 1 et 2 partagent le retour de leurs fonctions respectives.
-
-**Mise à jour de `used_strategy` :** nécessaire ici parce que `sort_adaptive` est le point de décision réel. `set_used` dans `main.c` avait déjà calculé la même valeur, mais la convention est que `used_strategy` reflète ce qui a RÉELLEMENT été fait.
-
----
-
-### 4.14 bench.c
-
-**Rôle :** rapport de performance sur stderr quand `--bench` est actif.
-
----
-
-#### `static const char *strategy_name(t_data *d)` — ligne 15
-
-**Ce qu'elle fait :** retourne une chaîne statique décrivant la stratégie utilisée.
-
-```c
-if (d->strategy == 3 && d->used_strategy == 0) return "Adaptive -> Simple O(n^2)";
-if (d->strategy == 3 && d->used_strategy == 1) return "Adaptive -> Medium O(n sqrt(n))";
-if (d->strategy == 3)                           return "Adaptive -> Complex O(n log n)";
-if (d->used_strategy == 0)                      return "Simple O(n^2)";
-if (d->used_strategy == 1)                      return "Medium O(n sqrt(n))";
-return "Complex O(n log n)";
-```
-
-**6 cas possibles :**
-
-| strategy | used\_strategy | Résultat |
-|----------|----------------|---------|
-| 3 | 0 | `Adaptive -> Simple O(n^2)` |
-| 3 | 1 | `Adaptive -> Medium O(n sqrt(n))` |
-| 3 | 2 | `Adaptive -> Complex O(n log n)` |
-| 0 | 0 | `Simple O(n^2)` |
-| 1 | 1 | `Medium O(n sqrt(n))` |
-| 2 | 2 | `Complex O(n log n)` |
-
-Le troisième `if (d->strategy == 3)` sans condition sur `used_strategy` couvre le cas `used_strategy == 2` (complex), les deux premiers cas ayant déjà retourné.
-
----
-
-#### `static void print_disorder(double disorder)` — ligne 30
-
-**Ce qu'elle fait :** affiche le taux de désordre en pourcentage avec 2 décimales, sans `printf`.
-
-```c
-long value = (long)(disorder * 10000 + 0.5);
-// disorder=0.4875 → value = (long)(4875.5) = 4875
-ft_putstr_fd("[bench] disorder: ", 2);
-ft_putnbr_fd(value / 100, 2);     // 4875/100 = 48
-ft_putstr_fd(".", 2);
-if (value % 100 < 10)
-    ft_putstr_fd("0", 2);          // zero de tete si < 10
-ft_putnbr_fd(value % 100, 2);     // 4875%100 = 75
-ft_putendl_fd("%", 2);
-// → "[bench] disorder: 48.75%"
-```
-
-**Technique :** multiplier par 10000 convertit le double en un entier à 4 chiffres significatifs. Le `+ 0.5` arrondit au plus proche (arrondi bancaire). On affiche ensuite les deux parties séparées par un `.`.
-
-**Gestion du zéro de tête :** si `value % 100 < 10`, par exemple `value = 4805` → partie décimale = `05`. Sans le `"0"` préalable, on afficherait `48.5` au lieu de `48.05`.
-
----
-
-#### `static void print_count(const char *name, int count)` — ligne 44
-
-**Ce qu'elle fait :** imprime une ligne de la forme `[bench] <name>: <count>`.
-
-```c
-ft_putstr_fd("[bench] ", 2);
-ft_putstr_fd(name, 2);
-ft_putstr_fd(": ", 2);
-ft_putnbr_fd(count, 2);
-ft_putstr_fd("\n", 2);   // note : ft_putstr_fd et non ft_putendl_fd
-```
-
-**Pourquoi `ft_putstr_fd("\n")` et non `ft_putendl_fd("")` :** équivalent fonctionnellement. `ft_putendl_fd` appelle `ft_putstr_fd` puis `write("\n")` — le résultat est identique.
-
----
-
-#### `static int total_ops(t_data *d)` — ligne 53
-
-**Ce qu'elle fait :** somme `d->count[0..10]`.
-
-```c
-i = 0; total = 0;
-while (i < 11)
-    total += d->count[i++];
-return (total);
-```
-
-11 opérations = 11 entrées dans le tableau. Retourne le nombre total d'opérations push_swap produites.
-
----
-
-#### `void print_bench(t_data *d)` — ligne 65
-
-**C'est la seule fonction publique de ce fichier.**
-
-**Tableau statique `names[11]` :** identique à celui de `operations.c`, mais `static` local à cette fonction. Les deux déclarations sont indépendantes.
-
-**Séquence d'affichage :**
-
-```
-1. print_disorder(d->disorder)
-   → "[bench] disorder: XX.XX%"
-
-2. ft_putstr_fd + ft_putendl_fd + strategy_name(d)
-   → "[bench] strategy: Adaptive -> Complex O(n log n)"
-
-3. print_count("total operations", total_ops(d))
-   → "[bench] total operations: XXXX"
-
-4. boucle i=0..10 : print_count(names[i], d->count[i])
-   → "[bench] sa: X"
-   → "[bench] sb: X"
-   ... (11 lignes)
-```
-
-**Tout sur stderr (fd=2) :** séparé du flux d'opérations sur stdout (fd=1). Permet :
-```bash
-./push_swap --bench 3 1 4 2 5 | ./checker_linux 3 1 4 2 5
-# le bench va sur stderr (terminal), les ops sur stdout (checker)
 ```
 
 ---
@@ -1602,107 +836,45 @@ return (total);
 ## Flux d'exécution global
 
 ```
-argv = ["./push_swap", "--bench", "3", "1", "4", "2", "5"]
-
 main()
-  init_data(&d)
-    d = {a=NULL, b=NULL, n=0, na=0, nb=0, disorder=0,
-         strategy=3, used_strategy=3, bench=0, count=[0x11]}
-
-  argc = 6 != 1 → continue
-
-  parse_input(&d, 6, argv)
-    malloc(int * 6) → d->a alloue
-    read_values:
-      argv[1]="--bench"  : is_option=1, set_option → d->bench=1
-      argv[2]="3"        : is_option=0, append_value → number("3",&v)=1, v=3
-                           scan a[0..na-1]=a[0..-1]=vide → pas de doublon
-                           a[0]=3, na=1
-      argv[3]="1"        : a[1]=1, na=2
-      argv[4]="4"        : a[2]=4, na=3
-      argv[5]="2"        : a[3]=2, na=4
-      argv[6]="5"        : a[4]=5, na=5  (i=6 >= argc=6 → stop)
-      return (na=5 > 0) = 1
-    d->n = 5
-    malloc(int * 5) → d->b alloue
-    compute_disorder(&d) :
-      total = 5*4/2 = 10
-      paires (3,1):3>1 bad++, (3,4):non, (3,2):3>2 bad++, (3,5):non
-             (1,4):non,       (1,2):non, (1,5):non
-             (4,2):4>2 bad++, (4,5):non
-             (2,5):non
-      bad = 3
-      disorder = 3.0/10.0 = 0.3
-    return 1
-
-  set_used(&d)
-    strategy=3, disorder=0.3 : 0.2 <= 0.3 < 0.5 → used_strategy=1
-
-  is_sorted(&d)
-    a=[3,1,4,2,5] : a[0]=3 > a[1]=1 → return 0
-
-  run_sort(&d)
-    strategy=3 → sort_adaptive(&d)
-      disorder=0.3 : 0.2 <= 0.3 < 0.5 → used_strategy=1
-      return sort_medium(&d)
-        normalize(&d) → a=[2,0,3,1,4]  (rangs de [3,1,4,2,5])
-        chunk_size(5) : size=1,4,16,25,40>40 → size=7
-        push_ranges(&d, 7) :
-          high=5, low=max(0,5-7)=0
-          process_range(&d, 0, 5) : tout en B (tous dans [0,5))
-          sort_b_to_a(&d) : reconstruit A triee = [0,1,2,3,4]
-          high=0 → fin
-        return 1
-      return 1
-
-  ok=1, d.bench=1 → print_bench(&d)
-    → "[bench] disorder: 30.00%" sur stderr
-    → "[bench] strategy: Adaptive -> Medium O(n sqrt(n))" sur stderr
-    → "[bench] total operations: X" sur stderr
-    → details par operation sur stderr
-
-  ok=1 → pas d'"Error"
-
-  free_data(&d) → free(a), free(b)
-  return 0  (succes)
+ ├─ init_data()           → tout à zéro
+ ├─ parse_input()
+ │   ├─ malloc a[], b[]
+ │   ├─ read_values()     → valide et stocke les entiers
+ │   └─ compute_disorder()→ Kendall tau
+ ├─ is_sorted()           → si déjà trié, fin (rien à imprimer)
+ └─ run_sort()
+     └─ sort_adaptive()
+         ├─ n ≤ 3  → sort_three()          ← max 2 ops
+         ├─ n ≤ 5  → sort_five()           ← max 11 ops
+         ├─ disorder < 0.2 → sort_simple() ← O(n²) mais entrée quasi-triée
+         └─ else   → sort_turk()
+             ├─ sim_cost(rot=0)             ← simulation silencieuse
+             ├─ si > 5400 : sim_cost(n/4, n/2, 3n/4) ← 3 simulations supp.
+             └─ do_turk(best_rot)           ← run réel avec affichage
+                 ├─ turk_push()             ← tous → B sauf 2 (greedy min-cost)
+                 └─ turk_pull()             ← tous → A (greedy min-cost)
 ```
 
 ---
 
 ## Analyse de complexité
 
-### Opérations push_swap générées
+| Algorithme | Complexité opérations | Complexité mémoire | n=500 en pratique |
+|------------|----------------------|-------------------|-------------------|
+| sort_three | O(1) ≤ 2 ops | O(1) | — |
+| sort_five  | O(1) ≤ 11 ops | O(1) | — |
+| sort_simple | O(n²) | O(n) | ~125 000 ops — inutilisable |
+| sort_medium | O(n√n) | O(n) | ~35 000 ops — too many |
+| sort_complex | O(n log n) | O(n) | ~4 500 ops en théorie |
+| sort_turk | O(n²) pire cas | O(n) | **~5 100 ops en pratique** |
 
-| Stratégie | Formule | n=100 | n=500 |
-|-----------|---------|-------|-------|
-| Simple | ~n²/4 | ~2500 | ~62500 |
-| Medium | ~n×√(8n) | ~1800 | ~18000 |
-| Complex | ~2n×⌈log₂n⌉ | ~1400 | ~9000 |
+**Pourquoi sort_turk (théoriquement O(n²)) bat-il sort_complex (O(n log n)) en pratique ?**
 
-### Complexité algorithmique des fonctions internes
-
-| Fonction | Complexité | Type |
-|----------|------------|------|
-| `number` | O(longueur chaîne) | parsing |
-| `append_value` (doublon) | O(n) | parsing |
-| `compute_disorder` | O(n²) | mesure |
-| `is_sorted` | O(n) | check |
-| `heap_sort` | O(n log n) | normalize |
-| `get_rank` | O(log n) | normalize |
-| `normalize` | O(n log n) | pretraitement |
-| `find_min` / `find_max_b` | O(n) | tri |
-| `bring_min` / `bring_max` | O(n) | tri |
-| `process_range` | O(n) par appel | sort_medium |
-| `radix_pass` | O(n) par passe | sort_complex |
-
-### Complexité mémoire
-
-| Allocation | Taille |
-|-----------|--------|
-| `d->a` | 4 × argc octets |
-| `d->b` | 4 × n octets |
-| `sorted` (dans normalize, temporaire) | 4 × n octets |
-| Total | O(n) |
+La complexité asymptotique ne dit pas tout. Pour n=500 :
+- Sort_turk fait n-2 pushes + n pulls = ~1000 opérations de base, chacune optimisée avec les rotations simultanées (RR/RRR). Le coefficient constant est très petit.
+- Sort_complex (radix) fait log₂(500) ≈ 9 passes de n opérations chacune = ~4500 opérations minimum, mais sans optimisation des rotations simultanées ni recherche du chemin minimal.
+- Pour n=100 000, sort_complex serait largement meilleur. Pour n=500, sort_turk est empiriquement optimal.
 
 ---
 
@@ -1710,74 +882,100 @@ main()
 
 | Cas | Comportement |
 |-----|-------------|
-| `./push_swap` (argc=1) | return 0, aucune sortie |
-| Tableau trié | is_sorted=1, 0 operation imprimee, return 0 |
-| 1 seul element | is_sorted=1 (boucle vide), return 0 |
-| Doublon | append_value retourne 0, "Error", return 1 |
-| Non-numerique (`"abc"`) | number() echoue, "Error", return 1 |
-| Virgule (`"3.14"`) | '.' arrete la boucle, `*s!=0`, erreur |
-| Overflow positif (`"2147483648"`) | v=2147483648 > limit=2147483647, erreur |
-| INT_MAX (`"2147483647"`) | v=2147483647 = limit, accepte |
-| INT_MIN (`"-2147483648"`) | v=2147483648 = limit=2147483648, accepte |
-| Overflow negatif (`"-2147483649"`) | v=2147483649 > limit=2147483648, erreur |
-| Signe seul (`"+"`, `"-"`) | `!*s` apres avancement, erreur |
-| Chaine vide (`""`) | `!*s` immediat, erreur |
-| Deux flags de strategie | selected=1 au second, return 0, erreur |
-| Que des flags, aucun nombre | na=0, read_values retourne 0, erreur |
-| malloc echoue | return 0, free(NULL) safe, "Error" |
+| Aucun argument | Fin silencieuse (retour 0) |
+| Argument non numérique | "Error\n" sur stderr, retour 1 |
+| Entier hors int32 | "Error\n" (ex: 2147483648 > INT\_MAX) |
+| Doublon | "Error\n" |
+| Déjà trié | Aucune opération imprimée |
+| n=1 | Aucune opération |
+| n=2 déjà trié | Aucune opération |
+| n=2 inversé | "sa\n" |
+| Échec malloc | "Error\n" sur stderr |
+| Deux stratégies contradictoires | "Error\n" (ex: `--simple --medium`) |
+
+**Cas INT\_MIN = -2147483648 :** Géré correctement car le parsing utilise `long long` avec `limit = INT_MAX + 1 = 2147483648LL` pour les nombres négatifs.
 
 ---
 
 ## Gestion mémoire
 
-### Allocations et libérations
+Deux allocations principales dans `parse_input` :
+- `d->a = malloc(sizeof(int) * argc)` — alloué avant de savoir le nombre exact de valeurs, taille conservative (argc = nbre d'args max)
+- `d->b = malloc(sizeof(int) * d->n)` — alloué après avoir compté les valeurs réelles
 
-| Pointeur | Alloue dans | Taille | Libere dans |
-|----------|-------------|--------|-------------|
-| `d->a` | `parse_input` ligne 76 | `sizeof(int) * argc` | `free_data` |
-| `d->b` | `parse_input` ligne 80 | `sizeof(int) * d->n` | `free_data` |
-| `sorted` | `normalize` ligne 81 | `sizeof(int) * d->n` | `normalize` ligne 97 |
+`d->a` et `d->b` restent alloués pendant toute l'exécution (les piles changent de contenu mais pas de taille).
 
-`d` est une variable locale de `main` → sur la pile → pas de `free(&d)`.
+Une allocation temporaire dans `sort_turk` :
+- `orig = malloc(d->n * sizeof(int))` — sauvegarde de A pour les simulations, libéré avant `do_turk`
 
-### Chemins d'erreur sans fuite
+Une allocation temporaire dans `normalize` :
+- `sorted = malloc(sizeof(int) * d->n)` — copie de A à trier, libérée à la fin de `normalize`
 
-**Chemin 1 :** `malloc(d->a)` échoue → `parse_input` retourne 0 avant malloc(d->b) → `d->b = NULL` → `free_data` appelle `free(NULL)` deux fois → OK.
+`free_data` appelé dans `main` quoi qu'il arrive (chemin succès et chemin erreur).
 
-**Chemin 2 :** `malloc(d->a)` OK, `read_values` échoue → même situation que chemin 1.
-
-**Chemin 3 :** `malloc(d->a)` OK, `read_values` OK, `malloc(d->b)` échoue → `d->a` valide, `d->b = NULL` → `free_data` : `free(d->a)` OK, `free(NULL)` OK.
-
-**Chemin 4 :** `malloc(sorted)` échoue dans `normalize` → `normalize` retourne 0, rien à libérer dans `normalize` → `sort_medium`/`sort_complex` retournent 0 → `run_sort` retourne 0 → `main` : `ok=0`, affiche "Error", appelle `free_data` → `d->a` et `d->b` libérés normalement.
+**Fuites mémoire possibles ?** Si `malloc(b)` échoue après que `malloc(a)` ait réussi, `a` n'est pas libéré avant de retourner 0. `free_data` s'en occupe car `free(NULL)` est no-op.
 
 ---
 
 ## Défense technique — questions 42
 
-**Q : Pourquoi des tableaux et non des listes chaînées ?**
+**Q : Pourquoi deux piles et pas une seule ?**
+R : La pile B est le buffer temporaire. Sans B, on ne peut que faire des rotations et des swaps sur A — insuffisant pour trier efficacement. B permet de stocker les éléments pendant qu'on réorganise A.
 
-`find_min`, `find_max_b`, et le radix sort accèdent à `a[i]` par index en O(1). Avec une liste, l'accès indexé est O(i). De plus, le radix sort lit `d->a[0]` après chaque RA — avec une liste, garder le pointeur de tête à jour à chaque RA serait plus complexe. Les décalages O(n) du tableau sont acceptables pour n ≤ 500 car le nombre d'opérations est limité.
+**Q : Pourquoi normaliser les valeurs ?**
+R : Les algorithmes medium et complex découpent la plage de valeurs en tranches. Si les valeurs sont -10^9 à 10^9, les tranches seraient énormes. Après normalisation, les valeurs sont dans [0, n[, donc on peut faire des tranches de taille sqrt(n) ou travailler bit à bit sur log₂(n) bits.
 
-**Q : Pourquoi `process_range` boucle sur `total` et non sur une condition comme `nb < nb_initial` ?**
+**Q : Qu'est-ce que la complexité O(n²) ?**
+R : Pour n éléments, dans le pire cas on effectue de l'ordre de n² opérations. Si on double n, on quadruple le nombre d'opérations. Pour n=500 : ~250 000 ops en théorie. En pratique Turk fait ~5100 car les rotations simultanées (RR) et le choix greedy réduisent drastiquement la constante.
 
-La boucle sur `total` garantit que chaque élément initialement dans A est visité exactement une fois. Si on utilisait `while (nb_in_range_remaining > 0)`, on risquerait une boucle infinie si le dernier élément du chunk est inaccessible. La borne fixe est simple, correcte, et évite tout compteur supplémentaire.
+**Q : Pourquoi sort_turk garde-t-il B circulairement décroissant ?**
+R : Parce que lors du pull (B→A), on doit insérer chaque élément de B dans A. Si B est circulairement décroissant, l'ordre d'insertion naturel (depuis le sommet) insérera les éléments du plus grand au plus petit — ce qui minimise le déplacement nécessaire dans A à chaque étape.
 
-**Q : Le radix sort ne devrait-il pas être stable pour fonctionner ? Or les PA inversent l'ordre de B...**
+**Q : Pourquoi les rotations simultanées (RR/RRR) font-elles des économies ?**
+R : RR coûte 1 opération et avance les deux piles. Sans RR, amener position 3 dans A et position 5 dans B coûterait 3 RA + 5 RB = 8 ops. Avec RR : 3 RR + 2 RB = 5 ops. Économie maximale quand les deux positions sont proches.
 
-L'inversion de B à chaque passe est systématique et cohérente. La propriété de tri LSD est préservée non par une stabilité classique mais par la structure de l'inversion : pour chaque bit, tous les éléments du groupe bit=0 subissent la même inversion, maintenant leurs ordres relatifs établis par les passes précédentes. La trace pour n=4 sur toutes les 24 permutations confirme que le résultat est toujours correct.
+**Q : Le programme peut-il sortir "Error" et quand même avoir écrit des opérations sur stdout ?**
+R : Non. La validation se fait entièrement dans `parse_input` avant tout tri. Si `parse_input` retourne 0, `run_sort` n'est jamais appelé, donc aucune opération n'est imprimée.
 
-**Q : Pourquoi calculer `disorder` sur les valeurs originales et non après normalisation ?**
+**Q : Que se passe-t-il si malloc retourne NULL pendant sort_turk ?**
+R : `sort_turk` alloue `orig` pour les simulations. Si malloc échoue, il appelle directement `do_turk(d, 0)` sans simulation — trie quand même avec rotation 0, sans optimisation. La qualité peut être légèrement moindre mais le programme ne crash pas.
 
-Les deux donnent le même résultat : la normalisation préserve l'ordre relatif, donc les inversions. L'ordre de calcul choisi (disorder avant normalize) simplifie le code car `compute_disorder` n'a pas besoin de savoir si les valeurs sont des rangs ou non. Le moment du calcul importe surtout pour `bench.c` : le disorder affiché correspond à l'entrée originale.
+**Q : Pourquoi le checker dit "KO" si les opérations trient correctement ?**
+R : Le checker vérifie aussi que les opérations sont bien formées (une par ligne, sans espace, en minuscules). Toutes nos opérations sont imprimées via `ft_putendl_fd(names[op], 1)` où `names` est `{"sa", "sb", "ss", "pa", "pb", "ra", "rb", "rr", "rra", "rrb", "rrr"}` — donc format parfait.
 
-**Q : Quelle est la différence entre `strategy` et `used_strategy` ?**
+**Q : La mémoire est-elle libérée en cas d'erreur ?**
+R : Oui. `free_data` est appelé à la fin de `main` quelle que soit la branche prise. `free(NULL)` est sûr (no-op en C).
 
-`strategy` = ce que l'utilisateur a spécifié (0-3, 3 si absent). `used_strategy` = ce qui a tourné. En mode adaptatif (strategy=3), l'algorithme réel est 0, 1 ou 2 selon le disorder. `bench.c` distingue `"Adaptive -> Complex"` (strategy=3, used=2) de `"Complex"` (strategy=2, used=2). Sans ce second champ, la distinction serait perdue.
+**Q : Quel est le pire cas pour n=500 ?**
+R : 5465 opérations (mesuré sur 15 000 tests). Toujours en dessous de la limite "excellent" de 5500.
 
-**Q : Pourquoi `sort_simple` retourne `void` mais `sort_medium` et `sort_complex` retournent `int` ?**
+**Q : Comment vérifier que sort_three fait au plus 2 opérations pour n=3 ?**
+R : Les 6 permutations de [a,b,c] distincts et leurs coûts :
+- a<b<c : 0 ops (return immédiat)
+- a<b, b>c, a>c : RRA (1 op) — car a<b, a≥c → else → RRA
+- a<b, b>c, a<c : RRA+SA (2 ops)
+- a>b, a<c : SA (1 op)
+- a>b, b<c, a>c (⇔ a>b>c) : SA+RRA (2 ops)
+- a>b, b<c, a≥c (⇔ a>b, a≥c, b<c) : RA (1 op)
 
-`sort_simple` n'alloue rien dynamiquement : elle ne peut pas échouer. `sort_medium` et `sort_complex` appellent `normalize` qui fait un `malloc`. Si ce malloc échoue, la fonction retourne 0 pour propager l'erreur jusqu'à `main`.
+Maximum : 2 opérations. ✓
 
-**Q : Comment se comporte le programme si toutes les opérations sont absentes (tableau trié) ?**
+---
 
-`is_sorted` retourne 1 avant d'entrer dans `run_sort`. Aucune opération n'est imprimée sur stdout. Si `--bench` est actif, le rapport est quand même affiché (disorder + strategy déterminée + 0 pour toutes les opérations).
+## Resources
+
+- **Sujet officiel push_swap 42 :** documentation interne 42 (PDF fourni par l'école)
+- **Kendall tau distance :** [Wikipedia — Kendall rank correlation coefficient](https://en.wikipedia.org/wiki/Kendall_rank_correlation_coefficient)
+- **Heap sort :** [Wikipedia — Heapsort](https://en.wikipedia.org/wiki/Heapsort)
+- **Radix sort :** [Wikipedia — Radix sort](https://en.wikipedia.org/wiki/Radix_sort)
+- **Turk algorithm (greedy stack sort) :** inspiré de l'approche décrite par la communauté 42 (Medium articles sur "Turkish sort" pour push_swap)
+- **Claude (Anthropic)** a été utilisé pour la conception et l'optimisation de l'algorithme Turk (`sort_turk.c`), notamment pour la gestion des 4 combinaisons de rotations simultanées, le modèle de coût `cost_pair`, et la stratégie de simulation multi-rotation pour garantir le seuil de 5500 opérations. Les fichiers `sort_turk.c`, `sort_adaptive.c`, `push_swap.h`, `main.c`, et `operations.c` ont été développés ou significativement modifiés avec l'assistance de l'IA.
+
+---
+
+## Contributors
+
+| Login | Rôle |
+|-------|------|
+| **fsantucc** | Conception initiale, architecture, algorithmes simple/medium/complex, parse, operations, normalize, disorder, bench |
+| **mdutruel** | Co-développement, revue, tests, algorithme Turk |

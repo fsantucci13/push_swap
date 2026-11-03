@@ -28,6 +28,7 @@ typedef struct s_data
 	int	strategy;
 	int	used_strategy;
 	int	bench;
+	int	silent;
 }	t_data;
 
 enum e_op {SA, SB, SS, PA, PB, RA, RB, RR, RRA, RRB, RRR};
@@ -51,5 +52,6 @@ int		sort_adaptive(t_data *d);
 void	sort_b_to_a(t_data *d);
 int		find_min(t_data *d);
 int		find_max_b(t_data *d);
+int		sort_turk(t_data *d);
 void	print_bench(t_data *d);
 #endif

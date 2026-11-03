@@ -103,5 +103,6 @@ void	apply_op(t_data *d, int op)
 	if (op == RRB || op == RRR)
 		reverse(d->b, d->nb);
 	d->count[op]++;
-	ft_putendl_fd(names[op], 1);
+	if (!d->silent)
+		ft_putendl_fd(names[op], 1);
 }
