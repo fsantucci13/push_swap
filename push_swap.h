@@ -6,7 +6,7 @@
 /*   By: fsantucc <fsantucc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/11/03 15:21:12 by fsantucc          #+#    #+#             */
-/*   Updated: 2026/11/03 15:21:13 by fsantucc         ###   ########.fr       */
+/*   Updated: 2026/11/03 16:05:54 by fsantucc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,16 +18,16 @@
 
 typedef struct s_data
 {
-	int	*a;
-	int	*b;
-	int	n;
-	int	na;
-	int	nb;
-	int	count[11];
+	int		*a;
+	int		*b;
+	int		n;
+	int		na;
+	int		nb;
+	int		count[11];
 	double	disorder;
-	int	strategy;
-	int	used_strategy;
-	int	bench;
+	int		strategy;
+	int		used_strategy;
+	int		bench;
 }	t_data;
 
 enum e_op

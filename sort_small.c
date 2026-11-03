@@ -3,6 +3,11 @@
 /*                                                        :::      ::::::::   */
 /*   sort_small.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
+/*   By: fsantucc <fsantucc@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/11/03 15:20:51 by fsantucc          #+#    #+#             */
+/*   Updated: 2026/11/03 15:55:00 by fsantucc         ###   ########.fr       */
+/*                                                                            */
 /* ************************************************************************** */
 
 #include "push_swap.h"
@@ -49,15 +54,13 @@ void	sort_small(t_data *d)
 
 	if (d->na == 2 && d->a[0] > d->a[1])
 		apply_op(d, SA);
-	if (d->na == 3)
-		sort_three(d);
 	while (d->na > 3)
 	{
 		pos = find_min(d);
 		bring_min(d, pos);
 		apply_op(d, PB);
 	}
-	if (d->na == 3 && d->nb > 0)
+	if (d->na == 3)
 		sort_three(d);
 	while (d->nb > 0)
 		apply_op(d, PA);

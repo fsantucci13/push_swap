@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   flags.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mdutruel <mdutruel@student.42.fr>          +#+  +:+       +#+        */
+/*   By: fsantucc <fsantucc@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/11/03 15:15:59 by mdutruel          #+#    #+#             */
-/*   Updated: 2026/11/03 15:17:33 by mdutruel         ###   ########.fr       */
+/*   Updated: 2026/11/03 16:06:06 by fsantucc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,4 +39,3 @@ int	set_option(t_data *d, char *s, int *selected)
 		d->strategy = 3;
 	return (1);
 }
-

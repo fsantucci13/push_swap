@@ -36,6 +36,8 @@ static void	heap_sort(int *a, int n)
 	int	i;
 	int	tmp;
 
+	if (n < 2)
+		return ;
 	i = n / 2 - 1;
 	while (i >= 0)
 	{
