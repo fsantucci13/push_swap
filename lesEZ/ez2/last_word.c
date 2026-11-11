@@ -25,3 +25,12 @@ int		main(int argc, char **argv)
 	write(1, "\n", 1);
 	return (0);
 }
+Afficher le dernier mot de la chaîne.
+
+1. Vérifier qu'il y a exactement 1 argument.
+2. Ignorer les espaces et tabulations à la fin.
+3. Remonter jusqu'au début du dernier mot.
+4. Afficher le dernier mot.
+5. Ajouter `\n`.
+
+Fonction autorisée : `write`.

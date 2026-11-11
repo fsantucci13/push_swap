@@ -68,3 +68,12 @@ int	main(int argc, char *argv[])
 	}
 	return (0);
 }
+Afficher la table de multiplication d'un nombre de 1 à 9.
+
+1. Vérifier qu'il y a exactement 1 argument.
+2. Convertir l'argument en entier.
+3. Faire une boucle de 1 à 9.
+4. Calculer `i * nombre`.
+5. Afficher chaque ligne au format `1 x nombre = résultat`.
+
+Fonction autorisée : `write`.

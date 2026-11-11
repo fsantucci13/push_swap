@@ -24,3 +24,12 @@ int ft_atoi(const char *str)
 
     return (resultat * signe);
 }
+Convertir une chaîne de caractères en entier (`int`).
+
+1. Ignorer les espaces au début.
+2. Détecter le signe (`+` ou `-`).
+3. Convertir les chiffres en nombre entier.
+4. S'arrêter au premier caractère non numérique.
+5. Retourner le résultat.
+
+Fonctions autorisées : aucune.

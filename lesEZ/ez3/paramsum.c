@@ -18,3 +18,12 @@ int	main(int argc, char **argv)
 	write(1, "\n", 1);
 	return (0);
 }
+Afficher le nombre d'arguments passés au programme.
+
+1. Récupérer `argc - 1`.
+2. Convertir ce nombre en caractères.
+3. Afficher le résultat suivi de `\n`.
+
+Cas particulier : aucun argument → afficher `0`.
+
+Fonction autorisée : `write`.

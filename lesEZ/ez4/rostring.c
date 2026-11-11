@@ -39,3 +39,15 @@ int main(int argc, char **argv)
     write(1, "\n", 1);
     return(0);
 }
+Faire tourner les mots d'une phrase d'un cran vers la gauche.
+
+1. Vérifier qu'il y a au moins 1 argument.
+2. Récupérer le premier mot.
+3. Afficher tous les autres mots dans leur ordre.
+4. Afficher le premier mot à la fin.
+5. Mettre exactement un espace entre les mots.
+6. Ajouter `\n`.
+
+Cas particulier : un seul mot → l'afficher tel quel.
+
+Fonctions autorisées : `write`, `malloc`, `free`.

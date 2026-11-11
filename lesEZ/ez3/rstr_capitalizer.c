@@ -33,3 +33,15 @@ int main(int argc, char **argv)
     }
     return (0);
 }
+Pour chaque mot, mettre la dernière lettre en majuscule et toutes les autres en minuscule.
+
+1. Parcourir chaque argument.
+2. Mettre toutes les lettres en minuscules.
+3. Mettre la dernière lettre de chaque mot en majuscule.
+4. Un mot se termine par un espace, une tabulation ou la fin de chaîne.
+5. Conserver les espaces et tabulations.
+6. Ajouter `\n` après chaque argument.
+
+Cas particulier : un mot d'une seule lettre devient majuscule.
+
+Fonction autorisée : `write`.

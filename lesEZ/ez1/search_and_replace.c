@@ -18,3 +18,12 @@ int main(int argc, char **argv)
     }
     write (1, "\n", 1);
 }
+Remplacer un caractère précis par un autre dans une chaîne.
+
+1. Vérifier qu'il y a exactement 3 arguments.
+2. Parcourir la première chaîne.
+3. Remplacer chaque occurrence du 2e argument par le 3e.
+4. Si le caractère n'existe pas, afficher la chaîne sans modification.
+5. Ajouter `\n`.
+
+Fonctions autorisées : `write`, `exit`.

@@ -33,7 +33,13 @@ int main(int ac, char **av)
 }
 
 
-ok donc +1 car exemple E =  5eme lettre de lalf
-donc ascii e 101 - ascii a 97
-ca fait 4sauf que e dans lalf = 5
-du coup tojours add 1
+Afficher chaque lettre autant de fois que sa position dans l'alphabet.
+
+1. Vérifier qu'il y a exactement 1 argument.
+2. Pour chaque lettre, calculer sa position dans l'alphabet (a = 1, b = 2...).
+3. Afficher la lettre autant de fois que sa position.
+4. Garder les majuscules et minuscules inchangées.
+5. Les caractères non alphabétiques sont affichés une seule fois.
+6. Ajouter `\n`.
+
+Fonction autorisée : `write`.

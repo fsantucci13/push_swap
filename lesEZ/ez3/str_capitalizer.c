@@ -36,3 +36,13 @@ int main(int argc, char *argv[])
 	}
 	return (0);
 }
+Mettre la première lettre de chaque mot en majuscule et le reste en minuscule.
+
+1. Parcourir chaque argument.
+2. Mettre la première lettre de chaque mot en majuscule.
+3. Mettre toutes les autres lettres en minuscule.
+4. Un mot commence après un espace ou une tabulation.
+5. Conserver les espaces et tabulations.
+6. Ajouter `\n` après chaque argument.
+
+Fonction autorisée : `write`.

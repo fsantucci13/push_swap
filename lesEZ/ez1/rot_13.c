@@ -23,3 +23,13 @@ int main(int argc, char **argv)
     write(1, "\n", 1);
     return (0);
 }
+Afficher la chaîne en remplaçant chaque lettre par celle située 13 positions après dans l'alphabet.
+
+1. Vérifier qu'il y a exactement 1 argument.
+2. Pour chaque lettre, avancer de 13 positions dans l'alphabet.
+3. Recommencer au début après `z` ou `Z`.
+4. Garder les majuscules et minuscules.
+5. Ne pas modifier les autres caractères.
+6. Ajouter `\n`.
+
+Fonction autorisée : `write`.

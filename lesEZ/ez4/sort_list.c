@@ -22,3 +22,14 @@ t_list	*sort_list(t_list *lst, int (*cmp)(int, int))
 	lst = tmp;
 	return (lst);
 }
+Trier une liste chaînée selon l'ordre défini par la fonction `cmp`.
+
+1. Parcourir la liste.
+2. Comparer les valeurs de deux éléments avec `cmp`.
+3. Échanger les éléments s'ils sont dans le mauvais ordre.
+4. Continuer jusqu'à ce que toute la liste soit triée.
+5. Retourner le pointeur vers le premier élément.
+
+Attention : conserver les doublons et utiliser `cmp` pour déterminer l'ordre du tri.
+
+Fonctions autorisées : aucune.

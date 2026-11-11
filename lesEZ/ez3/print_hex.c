@@ -28,3 +28,12 @@ int	main(int argc, char **argv)
 		print_hex(ft_atoi(argv[1]));
 	write(1, "\n", 1);
 }
+Convertir un nombre décimal (base 10) en hexadécimal (base 16).
+
+1. Vérifier qu'il y a exactement 1 argument.
+2. Convertir le nombre en entier.
+3. Diviser par 16 pour obtenir les chiffres hexadécimaux.
+4. Utiliser `0-9` et `a-f`.
+5. Afficher le résultat suivi de `\n`.
+
+Fonction autorisée : `write`.

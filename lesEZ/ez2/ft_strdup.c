@@ -20,3 +20,12 @@ char	*ft_strdup(char *src)
 	}
 	return (strcpy);
 }
+Dupliquer une chaîne dans une nouvelle zone mémoire.
+
+1. Calculer la longueur de `src`.
+2. Allouer de la mémoire avec `malloc` (`longueur + 1`).
+3. Copier tous les caractères de `src`.
+4. Copier le `'\0'` final.
+5. Retourner le nouveau pointeur.
+
+Fonction autorisée : `malloc`.

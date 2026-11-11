@@ -33,3 +33,12 @@ int main(int argc, char **argv)
 	}
 	write(1, "\n", 1);
 }
+Afficher les mots de la phrase dans l'ordre inverse.
+
+1. Vérifier qu'il y a exactement 1 argument.
+2. Repérer les mots séparés par des espaces ou tabulations.
+3. Parcourir les mots de la fin vers le début.
+4. Afficher chaque mot séparé par un espace.
+5. Ajouter `\n`.
+
+Fonctions autorisées : `write`, `malloc`, `free`.

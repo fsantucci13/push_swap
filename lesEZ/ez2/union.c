@@ -27,3 +27,12 @@ int main(int argc, char **argv)
     write(1, "\n", 1);
     return (0);
 }
+Afficher les caractères présents dans les deux chaînes, sans doublons.
+
+1. Vérifier qu'il y a exactement 2 arguments.
+2. Parcourir les deux chaînes dans l'ordre.
+3. Afficher chaque caractère uniquement à sa première apparition.
+4. Ne pas réafficher les caractères déjà rencontrés.
+5. Ajouter `\n`.
+
+Fonction autorisée : `write`.

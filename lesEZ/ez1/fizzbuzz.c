@@ -27,3 +27,9 @@ int		main()
 		write (1, "\n", 1);
 	}
 }
+Afficher les nombres de 1 à 100, chacun sur une nouvelle ligne.
+1. Si divisible par 3 → afficher fizz.
+2. Si divisible par 5 → afficher buzz.
+3. Si divisible par 3 et 5 → afficher fizzbuzz.
+4. Sinon → afficher le nombre.
+Fonction autorisée : write.

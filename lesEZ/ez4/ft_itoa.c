@@ -37,3 +37,16 @@ char *ft_itoa(int nbr)
 	}
 	return result;
 }
+
+Convertir un entier (`int`) en chaîne de caractères (`char *`).
+
+1. Compter le nombre de chiffres.
+2. Gérer le signe négatif (`-`).
+3. Allouer la mémoire avec `malloc`.
+4. Convertir chaque chiffre en caractère.
+5. Ajouter le `'\0'` final.
+6. Retourner la chaîne.
+
+Cas particulier : gérer `0` et `INT_MIN` (valeur entière minimale).
+
+Fonction autorisée : `malloc`.

@@ -23,3 +23,11 @@ int main(int argc, char const *argv[])
 	printf("\n");
 	return (0);
 }
+Afficher le PGCD (plus grand diviseur commun) de deux nombres.
+
+1. Vérifier qu'il y a exactement 2 arguments.
+2. Convertir les deux nombres avec `atoi`.
+3. Calculer leur PGCD avec l'algorithme d'Euclide.
+4. Afficher le résultat suivi de `\n`.
+
+Fonctions autorisées : `printf`, `atoi`, `malloc`, `free`.

@@ -17,3 +17,12 @@ int max(int *tab, unsigned int len)
 	}
 	return result;
 }
+Trouver le plus grand nombre dans un tableau.
+
+1. Si le tableau est vide (`len == 0`), retourner `0`.
+2. Prendre le premier élément comme maximum.
+3. Parcourir le reste du tableau.
+4. Remplacer le maximum si un nombre plus grand est trouvé.
+5. Retourner le maximum.
+
+Fonctions autorisées : aucune.

@@ -25,3 +25,13 @@ int main(int argc, char **argv)
     return (0);
 }
 
+Convertir une chaîne `lowerCamelCase` en `snake_case`.
+
+1. Vérifier qu'il y a exactement 1 argument.
+2. Parcourir la chaîne.
+3. Avant chaque majuscule, ajouter `_`.
+4. Transformer chaque majuscule en minuscule.
+5. Garder les minuscules inchangées.
+6. Afficher le résultat suivi de `\n`.
+
+Fonctions autorisées : `malloc`, `realloc`, `write`.

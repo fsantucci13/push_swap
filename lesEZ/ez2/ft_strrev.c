@@ -21,3 +21,11 @@ char    *ft_strrev(char *str)
     }
     return (str);
 }
+Inverser une chaîne directement en mémoire (sans créer de nouvelle chaîne).
+
+1. Trouver la longueur de la chaîne.
+2. Échanger le premier caractère avec le dernier.
+3. Continuer vers le centre.
+4. Retourner la chaîne inversée.
+
+Fonctions autorisées : aucune.
